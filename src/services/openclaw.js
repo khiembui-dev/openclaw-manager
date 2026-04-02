@@ -196,16 +196,10 @@ function healthCheck() {
     return state.includes('running') || state.includes('up');
   });
 
-  // Gateway HTTP check - try multiple endpoints
+  // Gateway check - verify port is listening (most reliable method)
   const port = installation.gateway_port || config.openclaw.gatewayPort;
-  const healthResult = execCommand(`curl -sf --max-time 5 http://127.0.0.1:${port}/healthz`);
-  if (healthResult.success) {
-    checks.gateway = true;
-  } else {
-    // Fallback: check if port responds at all (OpenClaw may not have /healthz)
-    const portCheck = execCommand(`curl -s --max-time 5 -o /dev/null -w "%{http_code}" http://127.0.0.1:${port}/`);
-    checks.gateway = portCheck.success && portCheck.stdout !== '000';
-  }
+  const portCheck = execCommand(`ss -tlnp | grep ':${port} '`);
+  checks.gateway = portCheck.success && portCheck.stdout.length > 0;
 
   // Reverse proxy check (if domain set)
   if (installation.domain) {
