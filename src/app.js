@@ -106,8 +106,16 @@ app.use((req, res, next) => {
   if (token && token === req.session.csrfToken) return next();
 
   // CSRF failed - redirect back
-  logger.warn('CSRF validation failed for:', req.path);
+  console.log('[CSRF] FAILED for path:', req.path, 'token match:', token === req.session.csrfToken);
   return res.redirect('back');
+});
+
+// Log all POST requests for debugging
+app.use((req, res, next) => {
+  if (req.method === 'POST') {
+    console.log(`[REQUEST] ${req.method} ${req.path} body-keys: ${Object.keys(req.body || {}).join(',')}`);
+  }
+  next();
 });
 
 // Make common data available to all views
