@@ -282,10 +282,31 @@ router.post('/ai/oauth/generate-url', async (req, res) => {
       }
     }
 
-    // If CLI didn't work, construct URL manually (best effort)
+    // If CLI didn't work, construct URL manually with PKCE
     if (!url) {
-      // Fallback: use known OpenAI OAuth endpoint
-      url = 'https://auth.openai.com/authorize?client_id=app-openclaw&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A1455%2Fauth%2Fcallback&scope=openid%20email%20profile';
+      const crypto = require('crypto');
+      const codeVerifier = crypto.randomBytes(32).toString('base64url');
+      const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+      const state = crypto.randomBytes(16).toString('hex');
+
+      // Save code_verifier for token exchange later
+      const { getDb } = require('../database');
+      const db = getDb();
+      db.prepare("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES ('oauth_code_verifier', ?, datetime('now'))").run(codeVerifier);
+      db.prepare("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES ('oauth_state', ?, datetime('now'))").run(state);
+
+      url = 'https://auth.openai.com/oauth/authorize?' + [
+        'response_type=code',
+        'client_id=app_EMoamEEZ73f0CkXaXp7hrann',
+        'redirect_uri=' + encodeURIComponent('http://localhost:1455/auth/callback'),
+        'scope=' + encodeURIComponent('openid profile email offline_access'),
+        'code_challenge=' + codeChallenge,
+        'code_challenge_method=S256',
+        'state=' + state,
+        'id_token_add_organizations=true',
+        'codex_cli_simplified_flow=true',
+        'originator=pi',
+      ].join('&');
     }
 
     res.json({ url, fromCli: !!url });
