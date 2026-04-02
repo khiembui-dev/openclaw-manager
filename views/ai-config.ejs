@@ -59,34 +59,62 @@
 <div class="card">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
     <div class="card-title" style="margin:0;">ChatGPT OAuth (OpenAI Codex)</div>
-    <button class="btn btn-primary btn-sm" id="oaBtn" onclick="startOA()">🔗 Kết nối ChatGPT</button>
+    <button class="btn btn-primary btn-sm" id="oaBtn" onclick="startOA()">🔗 Ket noi ChatGPT</button>
   </div>
-  <p class="card-subtitle">Ket noi tai khoan ChatGPT Plus/Pro de dung model GPT qua OAuth</p>
+  <p class="card-subtitle">Dang nhap tai khoan ChatGPT qua OAuth2 PKCE de dung Codex model</p>
   <div id="oaStat"></div>
   <div id="oaFlow" style="display:none;">
-    <div class="alert alert-info" style="flex-direction:column;gap:12px;">
-      <div><strong>Buoc 1:</strong> Chay lenh sau tren VPS qua SSH:</div>
-      <div style="background:#1e293b;color:#e2e8f0;padding:10px 14px;border-radius:6px;font-family:monospace;font-size:13px;word-break:break-all;">
-        cd /opt/openclaw && docker compose run --rm openclaw-cli channels login chatgpt
+
+    <div class="alert alert-warning" style="flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="background:#f59e0b;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</span>
+        <strong>Mo link dang nhap</strong>
       </div>
-      <div><strong>Buoc 2:</strong> Lam theo huong dan tren terminal de dang nhap ChatGPT</div>
-      <div><strong>Buoc 3:</strong> Sau khi dang nhap thanh cong, dan session token vao o ben duoi</div>
+      <div>Nhan nut ben duoi de mo trang dang nhap ChatGPT trong tab moi:</div>
+      <a href="https://auth.openai.com/log-in" target="_blank" class="btn btn-outline" style="width:fit-content;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Mo trang dang nhap ChatGPT
+      </a>
     </div>
+
+    <div class="alert alert-warning" style="flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="background:#f59e0b;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</span>
+        <strong>Dan Redirect URL</strong>
+      </div>
+      <div>Sau khi dang nhap, trinh duyet se redirect ve URL bat dau bang <code style="background:#fef3c7;padding:2px 6px;border-radius:4px;">localhost:1455/auth/callback?code=....</code>. Copy toan bo URL do va dan vao day:</div>
+    </div>
+
     <div class="form-group">
-      <label class="form-label">Session Token / Cookie (tu terminal)</label>
-      <input type="text" id="oaCallback" class="form-input" placeholder="Dan token nhan duoc tu lenh CLI...">
+      <input type="text" id="oaCallback" class="form-input" placeholder="http://localhost:1455/auth/callback?code=..." style="font-family:monospace;font-size:13px;">
     </div>
+
     <div class="form-group">
       <label class="form-label">Chon Model</label>
       <select id="oaModel" class="form-select">
-        <option value="gpt-4o">GPT-4o (mac dinh)</option><option value="gpt-4o-mini">GPT-4o Mini</option>
-        <option value="gpt-4.5">GPT-4.5</option><option value="o1">o1</option><option value="o1-mini">o1-mini</option>
-        <option value="o3">o3</option><option value="o3-mini">o3-mini</option><option value="o4-mini">o4-mini</option>
+        <option value="gpt-5.4">GPT-5.4 (mac dinh)</option>
+        <option value="gpt-5.4-mini">GPT-5.4 Mini</option>
+        <option value="gpt-5.3-codex">GPT-5.3 Codex</option>
+        <option value="gpt-5.3-codex-spark">GPT-5.3 Codex Spark</option>
+        <option value="gpt-5.2-codex">GPT-5.2 Codex</option>
+        <option value="gpt-5.2">GPT-5.2</option>
+        <option value="gpt-5.1-codex-max">GPT-5.1 Codex Max</option>
+        <option value="gpt-5.1-codex-mini">GPT-5.1 Codex Mini</option>
+        <option value="gpt-5.1">GPT-5.1</option>
+        <option value="gpt-4o">GPT-4o</option>
+        <option value="gpt-4o-mini">GPT-4o Mini</option>
+        <option value="o4-mini">o4-mini</option>
+        <option value="o3">o3</option>
+        <option value="o3-mini">o3-mini</option>
+        <option value="o3-pro">o3-pro</option>
+        <option value="o1">o1</option>
+        <option value="o1-pro">o1-pro</option>
       </select>
     </div>
+
     <div class="btn-group">
       <button class="btn btn-outline" onclick="document.getElementById('oaFlow').style.display='none'">Huy</button>
-      <button class="btn btn-primary" onclick="completeOA()">Luu token</button>
+      <button class="btn btn-primary" onclick="completeOA()">Hoan thanh ket noi</button>
     </div>
   </div>
 </div>

@@ -57,19 +57,45 @@ const config = {
     { id: 'minimax', name: 'Minimax', envKey: 'MINIMAX_API_KEY' },
   ],
 
-  // Model lists per provider
+  // Model lists per provider (updated 2026-04)
   models: {
-    openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'o1', 'o1-mini', 'o1-pro', 'o3', 'o3-mini', 'o4-mini'],
-    'chatgpt-oauth': ['gpt-4o (mặc định)', 'gpt-4o-mini', 'gpt-4.5', 'o1', 'o1-mini', 'o1-pro', 'o3', 'o3-mini', 'o4-mini', 'o3-pro'],
-    anthropic: ['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
-    google: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
-    deepseek: ['deepseek-chat', 'deepseek-coder', 'deepseek-reasoner'],
-    groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it'],
-    together: ['meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo', 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'mistralai/Mixtral-8x22B-Instruct-v0.1'],
-    mistral: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest', 'codestral-latest'],
-    xai: ['grok-2', 'grok-2-mini', 'grok-beta'],
-    cerebras: ['llama3.1-70b', 'llama3.1-8b'],
-    openrouter: ['auto'],
+    openai: [
+      'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.3-codex', 'gpt-5.3-codex-spark', 'gpt-5.2-codex', 'gpt-5.2', 'gpt-5.1-codex-max', 'gpt-5.1-codex-mini', 'gpt-5.1',
+      'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo',
+      'o4-mini', 'o3', 'o3-mini', 'o3-pro', 'o1', 'o1-mini', 'o1-pro',
+    ],
+    'chatgpt-oauth': [
+      'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.3-codex', 'gpt-5.3-codex-spark', 'gpt-5.2-codex', 'gpt-5.2',
+      'gpt-5.1-codex-max', 'gpt-5.1-codex-mini', 'gpt-5.1',
+      'gpt-4o', 'gpt-4o-mini',
+      'o4-mini', 'o3', 'o3-mini', 'o3-pro', 'o1', 'o1-pro',
+    ],
+    anthropic: [
+      'claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5',
+      'claude-opus-4-5', 'claude-sonnet-4-5',
+      'claude-3.5-sonnet', 'claude-3.5-haiku',
+      'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku',
+    ],
+    google: [
+      'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite',
+      'gemini-2.0-flash', 'gemini-2.0-flash-lite',
+      'gemini-1.5-pro', 'gemini-1.5-flash',
+    ],
+    deepseek: ['deepseek-chat', 'deepseek-coder', 'deepseek-reasoner', 'deepseek-r1'],
+    groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it', 'deepseek-r1-distill-llama-70b'],
+    together: [
+      'meta-llama/Llama-4-Maverick-17B-128E-Instruct-Turbo',
+      'meta-llama/Llama-4-Scout-17B-16E-Instruct',
+      'meta-llama/Meta-Llama-3.3-70B-Instruct-Turbo',
+      'meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo',
+      'deepseek-ai/DeepSeek-R1',
+      'Qwen/Qwen2.5-72B-Instruct-Turbo',
+    ],
+    mistral: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest', 'codestral-latest', 'pixtral-large-latest'],
+    xai: ['grok-3', 'grok-3-mini', 'grok-2', 'grok-2-mini'],
+    cerebras: ['llama-3.3-70b', 'llama-3.1-8b'],
+    sambanova: ['Meta-Llama-3.3-70B-Instruct', 'DeepSeek-R1', 'Qwen2.5-72B-Instruct'],
+    openrouter: ['auto', 'openai/gpt-5.4', 'anthropic/claude-opus-4-6', 'google/gemini-2.5-pro'],
   },
 
   // Channel definitions
