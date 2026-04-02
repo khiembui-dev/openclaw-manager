@@ -55,10 +55,10 @@ async function installDocker(onLog) {
   ];
 
   for (const step of steps) {
-    if (onLog) onLog(`[Docker] ${step.desc}...`);
+    if (onLog) onLog(`[Docker] ${step.desc}...\n`);
     logger.info(`Docker install: ${step.desc}`);
     try {
-      await execStream('bash', ['-c', step.cmd], {
+      await execStream(step.cmd, [], {
         timeout: 300000,
         onData: (data) => { if (onLog) onLog(data); },
       });

@@ -64,12 +64,11 @@ function execStream(command, args = [], options = {}) {
   const { cwd, env, onData, onError, timeout = 600000 } = options;
 
   return new Promise((resolve, reject) => {
-    const proc = spawn(command, args, {
-      cwd,
-      env: { ...process.env, ...env },
-      shell: true,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    // If no args, treat command as a full shell command string
+    const useShell = args.length === 0;
+    const proc = useShell
+      ? spawn(command, { cwd, env: { ...process.env, ...env }, shell: true, stdio: ['pipe', 'pipe', 'pipe'] })
+      : spawn(command, args, { cwd, env: { ...process.env, ...env }, shell: false, stdio: ['pipe', 'pipe', 'pipe'] });
 
     let stdout = '';
     let stderr = '';
