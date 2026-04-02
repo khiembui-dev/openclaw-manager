@@ -443,9 +443,11 @@ router.post('/version/upgrade', async (req, res) => {
       let healthy = false;
       for (let i = 0; i < 20; i++) {
         await new Promise(r => setTimeout(r, 3000));
-        const check = execCommand(`curl -sf http://127.0.0.1:${info.gatewayPort}/healthz`);
+        const check = execCommand(`curl -sf --max-time 3 http://127.0.0.1:${info.gatewayPort}/healthz`);
         if (check.success) { healthy = true; break; }
-        logFn(`  Đang chờ... (${i + 1}/20)`);
+        const portCheck = execCommand(`curl -s --max-time 3 -o /dev/null -w "%{http_code}" http://127.0.0.1:${info.gatewayPort}/`);
+        if (portCheck.success && portCheck.stdout !== '000') { healthy = true; break; }
+        logFn(`  Dang cho... (${i + 1}/20)`);
       }
       if (!healthy) {
         throw new Error('Health check thất bại sau khi nâng cấp');
