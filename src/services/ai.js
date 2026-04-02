@@ -3,8 +3,25 @@
 const { getDb } = require('../database');
 const { encrypt, decrypt, maskSecret } = require('../crypto');
 const openclaw = require('./openclaw');
+const docker = require('./docker');
 const config = require('../config');
 const logger = require('../utils/logger');
+
+/**
+ * Restart OpenClaw container to apply config/env changes.
+ */
+async function restartOpenClaw() {
+  try {
+    const info = openclaw.getServiceInfo();
+    if (info.installDir && info.status !== 'not_installed') {
+      logger.info('Restarting OpenClaw to apply config changes...');
+      await docker.composeRestart(info.installDir);
+      logger.info('OpenClaw restarted');
+    }
+  } catch (e) {
+    logger.warn('Failed to restart OpenClaw:', e.message);
+  }
+}
 
 /**
  * Get current AI configuration.
@@ -43,11 +60,11 @@ function getAIConfig() {
 }
 
 /**
- * Update provider and model.
+ * Update provider and model. Writes to config and restarts OpenClaw.
  */
-function updateProviderModel(provider, model) {
+async function updateProviderModel(provider, model) {
   const db = getDb();
-  db.prepare('UPDATE ai_config SET provider = ?, model = ?, updated_at = datetime(\'now\') WHERE id = 1')
+  db.prepare("UPDATE ai_config SET provider = ?, model = ?, updated_at = datetime('now') WHERE id = 1")
     .run(provider, model);
 
   // Update OpenClaw config
@@ -62,13 +79,16 @@ function updateProviderModel(provider, model) {
     logger.warn('Failed to update OpenClaw config:', e.message);
   }
 
+  // Restart to apply
+  await restartOpenClaw();
+
   return { provider, model };
 }
 
 /**
  * Add an API key.
  */
-function addApiKey(provider, apiKey, label = '') {
+async function addApiKey(provider, apiKey, label = '') {
   const db = getDb();
   const encrypted = encrypt(apiKey);
 
@@ -91,29 +111,29 @@ function addApiKey(provider, apiKey, label = '') {
 /**
  * Delete an API key.
  */
-function deleteApiKey(keyId) {
+async function deleteApiKey(keyId) {
   const db = getDb();
   db.prepare('DELETE FROM api_keys WHERE id = ?').run(keyId);
-  syncApiKeysToEnv();
+  await syncApiKeysToEnv();
 }
 
 /**
  * Set default API key for a provider.
  */
-function setDefaultApiKey(keyId) {
+async function setDefaultApiKey(keyId) {
   const db = getDb();
   const key = db.prepare('SELECT provider FROM api_keys WHERE id = ?').get(keyId);
-  if (!key) throw new Error('API key không tồn tại');
+  if (!key) throw new Error('API key khong ton tai');
 
   db.prepare('UPDATE api_keys SET is_default = 0 WHERE provider = ?').run(key.provider);
   db.prepare('UPDATE api_keys SET is_default = 1 WHERE id = ?').run(keyId);
-  syncApiKeysToEnv();
+  await syncApiKeysToEnv();
 }
 
 /**
- * Sync API keys from database to OpenClaw .env file.
+ * Sync API keys from database to OpenClaw .env file and restart.
  */
-function syncApiKeysToEnv() {
+async function syncApiKeysToEnv() {
   const db = getDb();
   const defaultKeys = db.prepare(
     'SELECT provider, api_key_encrypted FROM api_keys WHERE is_default = 1 AND is_active = 1'
@@ -128,6 +148,9 @@ function syncApiKeysToEnv() {
       }
     }
   }
+
+  // Restart to apply new keys
+  await restartOpenClaw();
 }
 
 /**
@@ -183,9 +206,9 @@ function deleteCustomProvider(providerId) {
 }
 
 /**
- * Save ChatGPT OAuth token.
+ * Save ChatGPT OAuth token and restart OpenClaw.
  */
-function saveOAuthToken(accessToken, model) {
+async function saveOAuthToken(accessToken, model) {
   const db = getDb();
   const encrypted = encrypt(accessToken);
 
@@ -207,17 +230,22 @@ function saveOAuthToken(accessToken, model) {
     `).run(encrypted, model);
   }
 
-  // Update env
-  const plainToken = accessToken;
-  openclaw.updateEnvFile('COPILOT_GITHUB_TOKEN', plainToken);
+  // Update env file
+  openclaw.updateEnvFile('COPILOT_GITHUB_TOKEN', accessToken);
+
+  // Update model in config
+  updateProviderModel('chatgpt-oauth', model);
+
+  // Restart container to pick up new env
+  await restartOpenClaw();
 
   return { status: 'connected', model };
 }
 
 /**
- * Disconnect ChatGPT OAuth.
+ * Disconnect ChatGPT OAuth and restart OpenClaw.
  */
-function disconnectOAuth() {
+async function disconnectOAuth() {
   const db = getDb();
   db.prepare(`
     UPDATE oauth_tokens SET
@@ -226,6 +254,12 @@ function disconnectOAuth() {
       updated_at = datetime('now')
     WHERE id = 1
   `).run();
+
+  // Remove token from env
+  openclaw.updateEnvFile('COPILOT_GITHUB_TOKEN', '');
+
+  // Restart container
+  await restartOpenClaw();
 }
 
 module.exports = {

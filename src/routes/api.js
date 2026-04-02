@@ -194,12 +194,12 @@ router.get('/ai/config', (req, res) => {
   }
 });
 
-router.post('/ai/provider-model', (req, res) => {
+router.post('/ai/provider-model', async (req, res) => {
   try {
     const { provider, model } = req.body;
-    if (!provider) return res.status(400).json({ error: 'Provider không được để trống' });
-    if (!model) return res.status(400).json({ error: 'Model không được để trống' });
-    const result = aiService.updateProviderModel(provider, model);
+    if (!provider) return res.status(400).json({ error: 'Provider khong duoc de trong' });
+    if (!model) return res.status(400).json({ error: 'Model khong duoc de trong' });
+    const result = await aiService.updateProviderModel(provider, model);
     auditLog(req.session.user.id, 'update_ai', `Provider: ${provider}, Model: ${model}`, req.ip);
     res.json(result);
   } catch (err) {
@@ -207,12 +207,12 @@ router.post('/ai/provider-model', (req, res) => {
   }
 });
 
-router.post('/ai/api-key', (req, res) => {
+router.post('/ai/api-key', async (req, res) => {
   try {
     const { provider, apiKey, label } = req.body;
-    if (!provider) return res.status(400).json({ error: 'Provider không được để trống' });
-    if (!apiKey) return res.status(400).json({ error: 'API key không được để trống' });
-    const result = aiService.addApiKey(provider, apiKey, label);
+    if (!provider) return res.status(400).json({ error: 'Provider khong duoc de trong' });
+    if (!apiKey) return res.status(400).json({ error: 'API key khong duoc de trong' });
+    const result = await aiService.addApiKey(provider, apiKey, label);
     auditLog(req.session.user.id, 'add_api_key', `Provider: ${provider}`, req.ip);
     res.json(result);
   } catch (err) {
@@ -220,9 +220,9 @@ router.post('/ai/api-key', (req, res) => {
   }
 });
 
-router.delete('/ai/api-key/:id', (req, res) => {
+router.delete('/ai/api-key/:id', async (req, res) => {
   try {
-    aiService.deleteApiKey(parseInt(req.params.id, 10));
+    await aiService.deleteApiKey(parseInt(req.params.id, 10));
     auditLog(req.session.user.id, 'delete_api_key', `Key ID: ${req.params.id}`, req.ip);
     res.json({ success: true });
   } catch (err) {
@@ -230,9 +230,9 @@ router.delete('/ai/api-key/:id', (req, res) => {
   }
 });
 
-router.post('/ai/api-key/:id/default', (req, res) => {
+router.post('/ai/api-key/:id/default', async (req, res) => {
   try {
-    aiService.setDefaultApiKey(parseInt(req.params.id, 10));
+    await aiService.setDefaultApiKey(parseInt(req.params.id, 10));
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -315,11 +315,11 @@ router.post('/ai/oauth/generate-url', async (req, res) => {
   }
 });
 
-router.post('/ai/oauth/save', (req, res) => {
+router.post('/ai/oauth/save', async (req, res) => {
   try {
     const { accessToken, model } = req.body;
-    if (!accessToken) return res.status(400).json({ error: 'Access token không được để trống' });
-    const result = aiService.saveOAuthToken(accessToken, model || 'gpt-4o');
+    if (!accessToken) return res.status(400).json({ error: 'Access token khong duoc de trong' });
+    const result = await aiService.saveOAuthToken(accessToken, model || 'gpt-5.4');
     auditLog(req.session.user.id, 'oauth_connect', 'ChatGPT OAuth connected', req.ip);
     res.json(result);
   } catch (err) {
@@ -327,9 +327,9 @@ router.post('/ai/oauth/save', (req, res) => {
   }
 });
 
-router.post('/ai/oauth/disconnect', (req, res) => {
+router.post('/ai/oauth/disconnect', async (req, res) => {
   try {
-    aiService.disconnectOAuth();
+    await aiService.disconnectOAuth();
     auditLog(req.session.user.id, 'oauth_disconnect', 'ChatGPT OAuth disconnected', req.ip);
     res.json({ success: true });
   } catch (err) {
