@@ -61,24 +61,32 @@
     <div class="card-title" style="margin:0;">ChatGPT OAuth (OpenAI Codex)</div>
     <button class="btn btn-primary btn-sm" id="oaBtn" onclick="startOA()">🔗 Kết nối ChatGPT</button>
   </div>
-  <p class="card-subtitle">Kết nối tài khoản ChatGPT qua OAuth2 PKCE</p>
+  <p class="card-subtitle">Ket noi tai khoan ChatGPT Plus/Pro de dung model GPT qua OAuth</p>
   <div id="oaStat"></div>
   <div id="oaFlow" style="display:none;">
-    <div class="alert alert-warning">1️⃣ <strong>Mở link đăng nhập:</strong> Nhấn vào link dưới để mở trang đăng nhập ChatGPT.</div>
-    <a id="oaLink" href="#" target="_blank" class="btn btn-outline" style="margin-bottom:12px;">🔗 Mở trang đăng nhập ChatGPT</a>
-    <div class="alert alert-warning">2️⃣ <strong>Dán Redirect URL:</strong> Sau khi đăng nhập, copy toàn bộ URL redirect và dán vào đây.</div>
-    <div class="form-group"><input type="text" id="oaCallback" class="form-input" placeholder="http://localhost/callback?code=..."></div>
+    <div class="alert alert-info" style="flex-direction:column;gap:12px;">
+      <div><strong>Buoc 1:</strong> Chay lenh sau tren VPS qua SSH:</div>
+      <div style="background:#1e293b;color:#e2e8f0;padding:10px 14px;border-radius:6px;font-family:monospace;font-size:13px;word-break:break-all;">
+        cd /opt/openclaw && docker compose run --rm openclaw-cli channels login chatgpt
+      </div>
+      <div><strong>Buoc 2:</strong> Lam theo huong dan tren terminal de dang nhap ChatGPT</div>
+      <div><strong>Buoc 3:</strong> Sau khi dang nhap thanh cong, dan session token vao o ben duoi</div>
+    </div>
     <div class="form-group">
-      <label class="form-label">Chọn Model</label>
+      <label class="form-label">Session Token / Cookie (tu terminal)</label>
+      <input type="text" id="oaCallback" class="form-input" placeholder="Dan token nhan duoc tu lenh CLI...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Chon Model</label>
       <select id="oaModel" class="form-select">
-        <option value="gpt-4o">GPT-4o (mặc định)</option><option value="gpt-4o-mini">GPT-4o Mini</option>
+        <option value="gpt-4o">GPT-4o (mac dinh)</option><option value="gpt-4o-mini">GPT-4o Mini</option>
         <option value="gpt-4.5">GPT-4.5</option><option value="o1">o1</option><option value="o1-mini">o1-mini</option>
         <option value="o3">o3</option><option value="o3-mini">o3-mini</option><option value="o4-mini">o4-mini</option>
       </select>
     </div>
     <div class="btn-group">
-      <button class="btn btn-outline" onclick="document.getElementById('oaFlow').style.display='none'">Huỷ</button>
-      <button class="btn btn-primary" onclick="completeOA()">Hoàn thành kết nối</button>
+      <button class="btn btn-outline" onclick="document.getElementById('oaFlow').style.display='none'">Huy</button>
+      <button class="btn btn-primary" onclick="completeOA()">Luu token</button>
     </div>
   </div>
 </div>
@@ -156,7 +164,7 @@ async function addCP() {
   try { await api('/api/ai/custom-provider',{method:'POST',body:{name:n,baseUrl:u,apiKey:k,defaultModel:m}}); closeModal('cpModal'); showToast('Đã thêm','success'); loadAI(); } catch(e){showToast(e.message,'error');}
 }
 async function delCP(id) { if(!confirm('Xoá?')) return; try{await api('/api/ai/custom-provider/'+id,{method:'DELETE'});loadAI();}catch(e){showToast(e.message,'error');} }
-function startOA() { document.getElementById('oaFlow').style.display=''; document.getElementById('oaLink').href='https://chatgpt.com/api/auth/oauth/authorize?client_id=openclaw&response_type=code&redirect_uri=http://localhost/callback'; }
+function startOA() { document.getElementById('oaFlow').style.display=''; }
 async function completeOA() {
   const cb=document.getElementById('oaCallback').value.trim(), m=document.getElementById('oaModel').value;
   if(!cb) return showToast('Dán URL callback','warning');
