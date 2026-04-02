@@ -10,13 +10,10 @@ Cài đặt OpenClaw chỉ bằng 1 click - phù hợp cho mô hình kinh doanh 
 SSH vào VPS Ubuntu rồi chạy:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y git curl && \
-git clone https://github.com/khiembui-dev/openclaw-manager.git /opt/openclaw-manager && \
-cd /opt/openclaw-manager && \
-sudo bash scripts/install-manager.sh
+curl -fsSL https://raw.githubusercontent.com/khiembui-dev/openclaw-manager/main/install.sh | sudo bash
 ```
 
-Sau đó mở trình duyệt: `http://IP-VPS:3847`
+Xong! Mở trình duyệt: `http://IP-VPS:3847`
 
 ---
 
