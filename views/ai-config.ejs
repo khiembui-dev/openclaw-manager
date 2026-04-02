@@ -65,16 +65,28 @@
   <div id="oaStat"></div>
   <div id="oaFlow" style="display:none;">
 
-    <div class="alert alert-warning" style="flex-direction:column;gap:8px;">
+    <div class="alert alert-info" style="flex-direction:column;gap:8px;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="background:#f59e0b;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</span>
-        <strong>Mo link dang nhap</strong>
+        <span style="background:#3b82f6;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</span>
+        <strong>Lay OAuth URL tu OpenClaw CLI</strong>
       </div>
-      <div>Nhan nut ben duoi de mo trang dang nhap ChatGPT trong tab moi:</div>
-      <a href="https://auth.openai.com/log-in" target="_blank" class="btn btn-outline" style="width:fit-content;">
+      <div>Nhan nut ben duoi. He thong se chay OpenClaw CLI de tao link dang nhap voi PKCE challenge dung:</div>
+      <button class="btn btn-primary" onclick="generateOAuthURL()" id="btnGenOA" style="width:fit-content;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        Mo trang dang nhap ChatGPT
-      </a>
+        Tao link dang nhap ChatGPT
+      </button>
+      <div id="oaUrlResult" style="display:none;">
+        <div style="margin-top:8px;">
+          <strong>Link dang nhap:</strong>
+          <a id="oaLoginUrl" href="#" target="_blank" style="word-break:break-all;display:block;margin-top:4px;color:#3b82f6;"></a>
+        </div>
+        <p style="font-size:12px;color:#6b7280;margin-top:4px;">Nhan vao link tren, dang nhap ChatGPT. Sau khi dang nhap, trinh duyet chuyen den trang loi (binh thuong) - copy URL tu thanh dia chi.</p>
+      </div>
+      <div id="oaCLINote" style="display:none;margin-top:8px;padding:10px 14px;background:#1e293b;color:#e2e8f0;border-radius:6px;font-size:12px;">
+        <div style="color:#f59e0b;margin-bottom:4px;">Neu nut tren khong hoat dong, chay lenh nay tren VPS:</div>
+        <code style="word-break:break-all;">cd /opt/openclaw && docker compose exec openclaw-gateway openclaw channels login chatgpt --no-open 2>&1 | head -5</code>
+        <div style="margin-top:4px;">Copy URL tu output va mo trong trinh duyet.</div>
+      </div>
     </div>
 
     <div class="alert alert-warning" style="flex-direction:column;gap:8px;">
@@ -82,7 +94,9 @@
         <span style="background:#f59e0b;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</span>
         <strong>Dan Redirect URL</strong>
       </div>
-      <div>Sau khi dang nhap, trinh duyet se redirect ve URL bat dau bang <code style="background:#fef3c7;padding:2px 6px;border-radius:4px;">localhost:1455/auth/callback?code=....</code>. Copy toan bo URL do va dan vao day:</div>
+      <div>Sau khi dang nhap xong, trinh duyet chuyen den trang <strong>khong tai duoc</strong> (binh thuong!). Nhin thanh dia chi se thay URL dang:</div>
+      <code style="background:#fef3c7;padding:6px 10px;border-radius:4px;font-size:12px;word-break:break-all;display:block;">http://localhost:1455/auth/callback?code=xxxxxxxx</code>
+      <div style="font-size:13px;margin-top:4px;">Copy <strong>toan bo URL</strong> tu thanh dia chi va dan vao o ben duoi:</div>
     </div>
 
     <div class="form-group">
@@ -193,13 +207,64 @@ async function addCP() {
 }
 async function delCP(id) { if(!confirm('Xoá?')) return; try{await api('/api/ai/custom-provider/'+id,{method:'DELETE'});loadAI();}catch(e){showToast(e.message,'error');} }
 function startOA() { document.getElementById('oaFlow').style.display=''; }
-async function completeOA() {
-  const cb=document.getElementById('oaCallback').value.trim(), m=document.getElementById('oaModel').value;
-  if(!cb) return showToast('Dán URL callback','warning');
-  let code=cb; try{code=new URL(cb).searchParams.get('code')||cb;}catch(e){}
-  try { await api('/api/ai/oauth/save',{method:'POST',body:{accessToken:code,model:m}}); document.getElementById('oaFlow').style.display='none'; showToast('Kết nối thành công!','success'); loadAI(); } catch(e){showToast(e.message,'error');}
+
+async function generateOAuthURL() {
+  const btn = document.getElementById('btnGenOA');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Dang tao link...';
+  try {
+    const res = await api('/api/ai/oauth/generate-url', { method: 'POST' });
+    const urlDiv = document.getElementById('oaUrlResult');
+    const cliNote = document.getElementById('oaCLINote');
+    if (res.url) {
+      urlDiv.style.display = '';
+      cliNote.style.display = 'none';
+      const link = document.getElementById('oaLoginUrl');
+      link.href = res.url;
+      link.textContent = res.url;
+      showToast('Link dang nhap da tao. Nhan vao link de dang nhap.', 'success');
+    } else {
+      // CLI failed to generate URL, show manual instructions
+      urlDiv.style.display = 'none';
+      cliNote.style.display = '';
+      showToast('Khong tao duoc URL tu dong. Dung lenh CLI tren VPS.', 'warning');
+    }
+  } catch (e) {
+    document.getElementById('oaUrlResult').style.display = 'none';
+    document.getElementById('oaCLINote').style.display = '';
+    showToast('Loi: ' + e.message + '. Dung lenh CLI tren VPS.', 'warning');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Tao link dang nhap ChatGPT';
+  }
 }
-async function disOA() { if(!confirm('Ngắt kết nối?')) return; try{await api('/api/ai/oauth/disconnect',{method:'POST'});showToast('Đã ngắt','success');loadAI();}catch(e){showToast(e.message,'error');} }
+
+async function completeOA() {
+  const cb = document.getElementById('oaCallback').value.trim();
+  const m = document.getElementById('oaModel').value;
+  if (!cb) return showToast('Dan URL callback', 'warning');
+  if (!cb.includes('code=')) return showToast('URL khong chua code. Hay copy dung URL tu thanh dia chi sau khi dang nhap.', 'warning');
+
+  let code = cb;
+  try { code = new URL(cb).searchParams.get('code') || cb; } catch(e) {
+    // Try to extract code from partial URL
+    const match = cb.match(/code=([^&]+)/);
+    if (match) code = match[1];
+  }
+
+  try {
+    await api('/api/ai/oauth/save', { method: 'POST', body: { accessToken: code, model: m } });
+    document.getElementById('oaFlow').style.display = 'none';
+    showToast('Ket noi ChatGPT thanh cong!', 'success');
+    loadAI();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function disOA() {
+  if (!confirm('Ngat ket noi ChatGPT?')) return;
+  try { await api('/api/ai/oauth/disconnect', { method: 'POST' }); showToast('Da ngat ket noi', 'success'); loadAI(); }
+  catch (e) { showToast(e.message, 'error'); }
+}
 </script>
 
 <%- include('partials/footer') %>

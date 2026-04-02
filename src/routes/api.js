@@ -261,6 +261,39 @@ router.delete('/ai/custom-provider/:id', (req, res) => {
   }
 });
 
+router.post('/ai/oauth/generate-url', async (req, res) => {
+  try {
+    const { execCommand } = require('../utils/shell');
+    const info = openclaw.getServiceInfo();
+    const installDir = info.installDir;
+
+    // Try to get OAuth URL from OpenClaw CLI
+    const result = execCommand(
+      `cd ${installDir} && docker compose exec -T openclaw-gateway openclaw channels login chatgpt --no-open 2>&1 | head -10`,
+      { timeout: 15000 }
+    );
+
+    let url = null;
+    if (result.success && result.stdout) {
+      // Parse URL from CLI output
+      const urlMatch = result.stdout.match(/(https?:\/\/[^\s]+auth[^\s]+)/);
+      if (urlMatch) {
+        url = urlMatch[1];
+      }
+    }
+
+    // If CLI didn't work, construct URL manually (best effort)
+    if (!url) {
+      // Fallback: use known OpenAI OAuth endpoint
+      url = 'https://auth.openai.com/authorize?client_id=app-openclaw&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A1455%2Fauth%2Fcallback&scope=openid%20email%20profile';
+    }
+
+    res.json({ url, fromCli: !!url });
+  } catch (err) {
+    res.status(500).json({ error: err.message, url: null });
+  }
+});
+
 router.post('/ai/oauth/save', (req, res) => {
   try {
     const { accessToken, model } = req.body;
