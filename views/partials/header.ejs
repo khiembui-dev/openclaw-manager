@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> - OpenClaw Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
   <meta name="csrf-token" content="<%= csrfToken %>">
 </head>
@@ -11,41 +14,74 @@
   <div class="layout">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-icon">OC</div>
-        <span>OpenClaw</span>
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="#22c55e"/>
+            <path d="M8 16C8 11.58 11.58 8 16 8C20.42 8 24 11.58 24 16C24 20.42 20.42 24 16 24" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="16" cy="16" r="3" fill="white"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">OpenClaw</span>
+          <span class="brand-sub">Manager</span>
+        </div>
       </div>
+
+      <div class="sidebar-section-label">MENU</div>
       <nav class="sidebar-nav">
         <a href="/" class="nav-item <%= page === 'dashboard' ? 'active' : '' %>">
-          <span class="nav-icon">📊</span> Tổng quan
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+          <span>Tong quan</span>
         </a>
         <a href="/service" class="nav-item <%= page === 'service' ? 'active' : '' %>">
-          <span class="nav-icon">📋</span> Thông tin dịch vụ
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          <span>Thong tin dich vu</span>
         </a>
         <a href="/domain" class="nav-item <%= page === 'domain' ? 'active' : '' %>">
-          <span class="nav-icon">🌐</span> Tên miền & SSL
-        </a>
-        <a href="/ai-config" class="nav-item <%= page === 'ai-config' ? 'active' : '' %>">
-          <span class="nav-icon">🤖</span> Cấu hình AI
-        </a>
-        <a href="/agents" class="nav-item <%= page === 'agents' ? 'active' : '' %>">
-          <span class="nav-icon">👥</span> Multi-Agent
-        </a>
-        <a href="/channels" class="nav-item <%= page === 'channels' ? 'active' : '' %>">
-          <span class="nav-icon">🔗</span> Kênh kết nối
-        </a>
-        <a href="/version" class="nav-item <%= page === 'version' ? 'active' : '' %>">
-          <span class="nav-icon">📦</span> Phiên bản & Nâng cấp
-        </a>
-        <a href="/logs" class="nav-item <%= page === 'logs' ? 'active' : '' %>">
-          <span class="nav-icon">📝</span> Nhật ký hệ thống
-        </a>
-        <a href="/control" class="nav-item <%= page === 'control' ? 'active' : '' %>">
-          <span class="nav-icon">⚙️</span> Điều khiển dịch vụ
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+          <span>Ten mien &amp; SSL</span>
         </a>
       </nav>
+
+      <div class="sidebar-section-label">CAU HINH</div>
+      <nav class="sidebar-nav">
+        <a href="/ai-config" class="nav-item <%= page === 'ai-config' ? 'active' : '' %>">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
+          <span>Cau hinh AI</span>
+        </a>
+        <a href="/agents" class="nav-item <%= page === 'agents' ? 'active' : '' %>">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <span>Multi-Agent</span>
+        </a>
+        <a href="/channels" class="nav-item <%= page === 'channels' ? 'active' : '' %>">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span>Kenh ket noi</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-section-label">HE THONG</div>
+      <nav class="sidebar-nav">
+        <a href="/version" class="nav-item <%= page === 'version' ? 'active' : '' %>">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+          <span>Phien ban &amp; Nang cap</span>
+        </a>
+        <a href="/logs" class="nav-item <%= page === 'logs' ? 'active' : '' %>">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+          <span>Nhat ky he thong</span>
+        </a>
+        <a href="/control" class="nav-item <%= page === 'control' ? 'active' : '' %>">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span>Dieu khien dich vu</span>
+        </a>
+      </nav>
+
       <div class="sidebar-footer">
-        OpenClaw Manager v<%= config.version %>
+        <div class="sidebar-footer-brand">
+          <span class="footer-by">Powered by</span>
+          <span class="footer-gencloud">GENCLOUD</span>
+        </div>
+        <div class="sidebar-footer-tagline">Cloud VPS Hosting uy tin - chat luong - gia re</div>
       </div>
     </aside>
 
@@ -53,15 +89,27 @@
     <div class="main">
       <!-- Header -->
       <header class="header">
-        <div class="header-tabs">
-          <a href="/" class="header-tab <%= page === 'dashboard' ? 'active' : '' %>">Tổng quan</a>
-          <a href="/service" class="header-tab <%= ['service','install','domain','ai-config','agents','channels','version','control'].includes(page) ? 'active' : '' %>">OpenClaw</a>
-          <a href="/backup" class="header-tab <%= page === 'backup' ? 'active' : '' %>">Backups</a>
-          <a href="/logs" class="header-tab <%= page === 'logs' ? 'active' : '' %>">Nhật ký</a>
+        <div class="header-left">
+          <button class="mobile-menu-btn" onclick="toggleSidebar()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="header-tabs">
+            <a href="/" class="header-tab <%= page === 'dashboard' ? 'active' : '' %>">Tong quan</a>
+            <a href="/service" class="header-tab <%= ['service','install','domain','ai-config','agents','channels','version','control'].includes(page) ? 'active' : '' %>">OpenClaw</a>
+            <a href="/backup" class="header-tab <%= page === 'backup' ? 'active' : '' %>">Backups</a>
+            <a href="/logs" class="header-tab <%= page === 'logs' ? 'active' : '' %>">Nhat ky</a>
+          </div>
         </div>
         <div class="header-right">
-          <span class="header-user"><%= user ? user.username : '' %></span>
-          <a href="/auth/logout" class="btn btn-sm btn-outline">Đăng xuất</a>
+          <div class="header-status" id="headerStatus">
+            <span class="status-dot unknown"></span>
+            <span class="status-label">--</span>
+          </div>
+          <div class="header-user-menu">
+            <span class="header-user-avatar"><%= user ? user.username.charAt(0).toUpperCase() : 'A' %></span>
+            <span class="header-user-name"><%= user ? user.username : '' %></span>
+          </div>
+          <a href="/auth/logout" class="btn btn-sm btn-outline">Dang xuat</a>
         </div>
       </header>
 

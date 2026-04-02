@@ -8,5 +8,19 @@
 
   <!-- Global scripts -->
   <script src="/static/js/app.js"></script>
+  <script>
+    // Update header status
+    (async function updateHeaderStatus() {
+      try {
+        const info = await api('/api/service/info');
+        const el = document.getElementById('headerStatus');
+        if (el) {
+          const map = { running: 'Dang chay', stopped: 'Da dung', error: 'Loi', not_installed: 'Chua cai' };
+          el.innerHTML = '<span class="status-dot ' + info.status + '"></span><span class="status-label">' + (map[info.status] || info.status) + '</span>';
+        }
+      } catch(e) {}
+      setTimeout(updateHeaderStatus, 15000);
+    })();
+  </script>
 </body>
 </html>

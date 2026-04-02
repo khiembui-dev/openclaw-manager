@@ -3,22 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập - OpenClaw Manager</title>
+  <title>Dang nhap - OpenClaw Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
   <div class="login-page">
     <div class="login-box">
       <div class="login-logo">
-        <div style="display:inline-flex;align-items:center;gap:10px;">
-          <div class="logo-icon" style="width:36px;height:36px;font-size:20px;">OC</div>
-          <span>OpenClaw Manager</span>
+        <div class="login-logo-icon">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <path d="M8 16C8 11.58 11.58 8 16 8C20.42 8 24 11.58 24 16C24 20.42 20.42 24 16 24" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="16" cy="16" r="3" fill="white"/>
+          </svg>
         </div>
+        <div class="login-title">OpenClaw Manager</div>
+        <div class="login-brand">Powered by <strong>GENCLOUD</strong> &mdash; Cloud VPS Hosting uy tin - chat luong - gia re</div>
       </div>
 
       <% if (error) { %>
         <div class="alert alert-danger">
-          <span class="alert-icon">⚠️</span>
+          <span class="alert-icon">!</span>
           <span><%= error %></span>
         </div>
       <% } %>
@@ -26,15 +33,15 @@
       <form method="POST" action="/auth/login">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
-          <label class="form-label">Tên đăng nhập</label>
+          <label class="form-label">Ten dang nhap</label>
           <input type="text" name="username" class="form-input" placeholder="admin" required autofocus>
         </div>
         <div class="form-group">
-          <label class="form-label">Mật khẩu</label>
-          <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+          <label class="form-label">Mat khau</label>
+          <input type="password" name="password" class="form-input" placeholder="Nhap mat khau" required>
         </div>
         <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
-          Đăng nhập
+          Dang nhap
         </button>
       </form>
     </div>
