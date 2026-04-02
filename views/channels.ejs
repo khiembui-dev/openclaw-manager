@@ -1,0 +1,41 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Kênh kết nối</h1>
+<p class="page-subtitle">Quản lý các kênh nhắn tin kết nối với OpenClaw</p>
+
+<div class="channel-grid" id="chGrid"></div>
+
+<div class="card">
+  <div class="card-title">Thêm hoặc cập nhật kênh</div>
+  <div class="form-group">
+    <label class="form-label">Chọn kênh</label>
+    <select id="chType" class="form-select" onchange="onChSel()">
+      <option value="">-- Chọn --</option>
+      <option value="telegram">Telegram</option>
+      <option value="discord">Discord</option>
+      <option value="slack">Slack</option>
+      <option value="zalo">Zalo</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Token</label>
+    <input type="password" id="chToken" class="form-input" placeholder="Nhập token">
+    <p class="form-hint" id="chHint"></p>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="saveCh()">💾 Lưu cấu hình</button>
+    <button class="btn btn-outline" onclick="testCh()">🔍 Kiểm tra kết nối</button>
+  </div>
+  <div id="chTestRes" style="margin-top:12px;display:none;"></div>
+</div>
+
+<script>
+let chs=[];
+document.addEventListener('DOMContentLoaded', loadCh);
+async function loadCh(){try{chs=await api('/api/channels');const el=document.getElementById('chGrid');el.innerHTML=chs.map(c=>{const sc=c.status==='connected'?'badge-success':c.status==='error'?'badge-danger':'badge-gray';const st=c.status==='connected'?'Đã kết nối':c.status==='error'?'Lỗi':'Chưa kết nối';return'<div class="channel-card"><span class="channel-icon">'+c.icon+'</span><div class="channel-info"><div class="channel-name">'+c.name+'</div><span class="badge '+sc+'">'+st+'</span></div></div>';}).join('');}catch(e){showToast(e.message,'error');}}
+function onChSel(){const t=document.getElementById('chType').value;const h={telegram:'Bot Token từ @BotFather',discord:'Bot Token từ Discord Developer Portal',slack:'Bot Token (xoxb-...) từ Slack API',zalo:'Token OA từ Zalo Developer'};document.getElementById('chHint').textContent=h[t]||'';}
+async function saveCh(){const t=document.getElementById('chType').value,tk=document.getElementById('chToken').value.trim();if(!t)return showToast('Chọn kênh','warning');if(!tk)return showToast('Nhập token','warning');try{await api('/api/channels/'+t,{method:'POST',body:{token:tk,enabled:true}});document.getElementById('chToken').value='';showToast('Đã lưu','success');loadCh();}catch(e){showToast(e.message,'error');}}
+async function testCh(){const t=document.getElementById('chType').value;if(!t)return showToast('Chọn kênh','warning');const el=document.getElementById('chTestRes');el.style.display='';el.innerHTML='<p><span class="spinner"></span> Đang kiểm tra...</p>';try{const r=await api('/api/channels/'+t+'/test',{method:'POST'});el.innerHTML=r.success?'<div class="alert alert-success">✅ Thành công! '+(r.info||'')+'</div>':'<div class="alert alert-danger">❌ Thất bại: '+(r.error||'')+'</div>';loadCh();}catch(e){el.innerHTML='<div class="alert alert-danger">❌ '+e.message+'</div>';}}
+</script>
+
+<%- include('partials/footer') %>

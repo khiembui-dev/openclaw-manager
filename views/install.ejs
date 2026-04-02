@@ -1,0 +1,87 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Cài đặt OpenClaw</h1>
+<p class="page-subtitle">Cài đặt OpenClaw 1 click trên VPS của bạn</p>
+
+<div id="installForm" class="install-wizard">
+  <div class="card">
+    <div class="card-title">Cấu hình cài đặt</div>
+    <div class="form-group">
+      <label class="form-label">Domain hoặc Subdomain (tùy chọn)</label>
+      <input type="text" id="installDomain" class="form-input" placeholder="openclaw.example.com">
+      <p class="form-hint">Để trống nếu muốn truy cập bằng IP. Domain phải đã trỏ DNS về IP server.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email (cho SSL Let's Encrypt)</label>
+      <input type="email" id="installEmail" class="form-input" placeholder="admin@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Thư mục cài đặt</label>
+      <input type="text" id="installDir" class="form-input" value="/opt/openclaw">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Cổng Gateway</label>
+        <input type="number" id="installGwPort" class="form-input" value="18789">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cổng Bridge</label>
+        <input type="number" id="installBrPort" class="form-input" value="18790">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Docker Image</label>
+      <input type="text" id="installImage" class="form-input" value="ghcr.io/openclaw/openclaw:latest">
+    </div>
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ️</span>
+      <div><strong>Lưu ý:</strong> Quá trình cài đặt sẽ tự động cài Docker (nếu chưa có), tải image, tạo cấu hình và khởi chạy OpenClaw.</div>
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="startInstall()">🚀 Cài đặt OpenClaw</button>
+  </div>
+</div>
+
+<div id="installProgress" style="display:none;">
+  <div class="card">
+    <div class="card-title">Tiến trình cài đặt</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+    <p id="progressText" style="font-size:13px;color:var(--gray-600);margin-bottom:16px;">Đang chuẩn bị...</p>
+    <div class="log-viewer" id="installLog"></div>
+    <div id="installDone" style="margin-top:12px;display:none;">
+      <div class="btn-group">
+        <a href="/service" class="btn btn-primary">📋 Xem thông tin dịch vụ</a>
+        <a href="/" class="btn btn-outline">🏠 Về trang chủ</a>
+      </div>
+    </div>
+    <div id="installErr" style="margin-top:12px;display:none;">
+      <div class="alert alert-danger">❌ <span id="installErrMsg"></span></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startInstall()">🔄 Thử lại</button>
+        <button class="btn btn-outline" onclick="document.getElementById('installForm').style.display='';document.getElementById('installProgress').style.display='none';">⬅️ Quay lại</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let jobId = null, poll = null;
+async function startInstall() {
+  const d = { domain:document.getElementById('installDomain').value.trim(), email:document.getElementById('installEmail').value.trim(), installDir:document.getElementById('installDir').value.trim(), gatewayPort:+document.getElementById('installGwPort').value, bridgePort:+document.getElementById('installBrPort').value, image:document.getElementById('installImage').value.trim() };
+  if (d.domain && !d.email) return showToast('Nhập email để cấp SSL','warning');
+  document.getElementById('installForm').style.display='none';
+  document.getElementById('installProgress').style.display='';
+  document.getElementById('installDone').style.display='none';
+  document.getElementById('installErr').style.display='none';
+  document.getElementById('installLog').textContent='';
+  try {
+    const r = await api('/api/install',{method:'POST',body:d});
+    jobId = r.jobId;
+    poll = pollJobStatus(jobId, 'progressBar', 'progressText', 'installLog',
+      ()=>{document.getElementById('installDone').style.display='';showToast('Cài đặt thành công!','success');},
+      (e)=>{document.getElementById('installErr').style.display='';document.getElementById('installErrMsg').textContent=e;}
+    );
+  } catch(e) { document.getElementById('installErr').style.display='';document.getElementById('installErrMsg').textContent=e.message; }
+}
+</script>
+
+<%- include('partials/footer') %>

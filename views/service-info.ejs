@@ -1,0 +1,98 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Thông tin dịch vụ</h1>
+<p class="page-subtitle">Xem thông tin tổng quan về OpenClaw</p>
+
+<div id="notInstalledBanner" class="alert alert-warning" style="display:none;">
+  <span class="alert-icon">⚠️</span>
+  <div><strong>OpenClaw chưa được cài đặt.</strong> <a href="/install">Cài đặt ngay</a></div>
+</div>
+
+<div class="card">
+  <div class="info-row">
+    <span class="info-label">Tên miền hiện tại</span>
+    <span class="info-value" id="infoDomain">--</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Địa chỉ IP</span>
+    <span class="info-value" id="infoIP">--</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Phiên bản</span>
+    <span class="info-value" id="infoVersion">--</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Trạng thái</span>
+    <span class="info-value" id="infoStatus"><span class="badge badge-gray">Đang tải...</span></span>
+  </div>
+  <div style="margin-top:12px;">
+    <a id="btnDashboard" href="#" target="_blank" class="btn btn-primary" style="pointer-events:none;opacity:0.5;">🖥️ Mở Dashboard OpenClaw</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Gateway Token</div>
+  <div class="token-display">
+    <span class="token-text" id="tokenText">••••••••••••••••</span>
+    <div class="token-actions">
+      <button class="btn-icon" onclick="toggleToken()" title="Hiện/Ẩn">👁️</button>
+      <button class="btn-icon" onclick="copyToken()" title="Copy">📋</button>
+      <button class="btn-icon" onclick="regenerateToken()" title="Tạo mới">🔄</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Tài khoản đăng nhập</div>
+  <p class="card-subtitle">Tạo tài khoản để đăng nhập OpenClaw qua giao diện web</p>
+  <div class="form-group">
+    <label class="form-label">Tên đăng nhập / Email</label>
+    <input type="text" id="acctUser" class="form-input" placeholder="admin@example.com">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Mật khẩu</label>
+    <input type="password" id="acctPass" class="form-input" placeholder="Mật khẩu">
+  </div>
+  <button class="btn btn-primary" onclick="createAccount()">Tạo tài khoản</button>
+  <div id="acctResult" style="margin-top:12px;display:none;">
+    <div class="alert alert-success">✅ Tạo thành công. Truy cập <a id="loginLink" href="#" target="_blank"></a> để đăng nhập.</div>
+  </div>
+</div>
+
+<script>
+let svcInfo = {}, tokenVis = false;
+document.addEventListener('DOMContentLoaded', () => { loadSvc(); setInterval(loadSvc, 10000); });
+
+async function loadSvc() {
+  try {
+    svcInfo = await api('/api/service/info');
+    document.getElementById('infoDomain').textContent = svcInfo.domain || '(chưa cấu hình)';
+    document.getElementById('infoIP').textContent = svcInfo.ipAddress || '--';
+    document.getElementById('infoVersion').textContent = svcInfo.version || '--';
+    const sm = { running:{t:'Đang chạy',c:'badge-success'}, stopped:{t:'Đã dừng',c:'badge-danger'}, error:{t:'Lỗi',c:'badge-danger'}, not_installed:{t:'Chưa cài đặt',c:'badge-warning'} };
+    const s = sm[svcInfo.status] || {t:svcInfo.status,c:'badge-gray'};
+    document.getElementById('infoStatus').innerHTML = '<span class="status-dot '+svcInfo.status+'"></span> <span class="badge '+s.c+'">'+s.t+'</span>';
+    const btn = document.getElementById('btnDashboard');
+    if (svcInfo.status === 'running') {
+      const p = svcInfo.sslEnabled?'https':'http', h = svcInfo.domain||svcInfo.ipAddress, port = svcInfo.sslEnabled?'':':'+svcInfo.gatewayPort;
+      btn.href = p+'://'+h+port; btn.style.pointerEvents='auto'; btn.style.opacity='1';
+    }
+    document.getElementById('notInstalledBanner').style.display = svcInfo.status==='not_installed'?'':'none';
+    if (!tokenVis) document.getElementById('tokenText').textContent = svcInfo.gatewayTokenMasked || '••••••••';
+  } catch(e) {}
+}
+
+function toggleToken() { tokenVis=!tokenVis; document.getElementById('tokenText').textContent = tokenVis?(svcInfo.gatewayToken||''):(svcInfo.gatewayTokenMasked||'••••••••'); }
+async function copyToken() { if(svcInfo.gatewayToken){await navigator.clipboard.writeText(svcInfo.gatewayToken);showToast('Token đã copy','success');} }
+async function regenerateToken() {
+  if(!confirm('Tạo mới token? Token cũ sẽ mất.')) return;
+  try { const r=await api('/api/service/token/regenerate',{method:'POST'}); svcInfo.gatewayToken=r.token; tokenVis=true; document.getElementById('tokenText').textContent=r.token; showToast('Token mới đã tạo','success'); } catch(e){showToast(e.message,'error');}
+}
+async function createAccount() {
+  const u=document.getElementById('acctUser').value, p=document.getElementById('acctPass').value;
+  if(!u||!p) return showToast('Nhập đầy đủ','warning');
+  try { const r=await api('/api/service/account',{method:'POST',body:{username:u,password:p}}); document.getElementById('acctResult').style.display=''; const l=document.getElementById('loginLink'); l.href=r.loginUrl; l.textContent=r.loginUrl; showToast('Tạo thành công','success'); } catch(e){showToast(e.message,'error');}
+}
+</script>
+
+<%- include('partials/footer') %>

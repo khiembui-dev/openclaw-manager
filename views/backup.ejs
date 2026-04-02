@@ -1,0 +1,23 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Sao lưu & Phục hồi</h1>
+<p class="page-subtitle">Backup và restore cấu hình OpenClaw</p>
+
+<div class="btn-group" style="margin-bottom:16px;">
+  <button class="btn btn-primary" onclick="createBk()">💾 Tạo bản sao lưu</button>
+  <button class="btn btn-outline" onclick="loadBk()">🔄 Làm mới</button>
+</div>
+
+<div class="card">
+  <div class="card-title">Danh sách bản sao lưu</div>
+  <div id="bkList"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', loadBk);
+async function loadBk(){try{const bs=await api('/api/backup/list');const el=document.getElementById('bkList');if(!bs.length){el.innerHTML='<p style="color:var(--gray-500)">Chưa có</p>';return;}let h='<table><thead><tr><th>Tên file</th><th>Kích thước</th><th>Ngày tạo</th><th></th></tr></thead><tbody>';bs.forEach(b=>{h+='<tr><td style="font-family:monospace;font-size:12px;">'+b.filename+'</td><td>'+(b.size/1024).toFixed(1)+' KB</td><td>'+new Date(b.createdAt).toLocaleString('vi-VN')+'</td><td><button class="btn btn-sm btn-outline" onclick="restoreBk(\''+b.filename+'\')">Phục hồi</button></td></tr>';});el.innerHTML=h+'</tbody></table>';}catch(e){showToast(e.message,'error');}}
+async function createBk(){try{const r=await api('/api/backup/create',{method:'POST'});showToast('Backup: '+r.filename,'success');loadBk();}catch(e){showToast(e.message,'error');}}
+async function restoreBk(f){if(!confirm('Phục hồi từ '+f+'?'))return;try{await api('/api/backup/restore',{method:'POST',body:{filename:f}});showToast('Phục hồi xong. Restart dịch vụ.','success');}catch(e){showToast(e.message,'error');}}
+</script>
+
+<%- include('partials/footer') %>

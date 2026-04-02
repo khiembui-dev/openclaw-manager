@@ -1,0 +1,45 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Phiên bản & Nâng cấp</h1>
+<p class="page-subtitle">Xem phiên bản hiện tại và nâng cấp OpenClaw</p>
+
+<div class="card">
+  <div class="info-row"><span class="info-label">Phiên bản</span><span class="info-value" id="ver">--</span></div>
+  <div class="info-row"><span class="info-label">Docker Image</span><span class="info-value" id="img">--</span></div>
+  <div class="info-row"><span class="info-label">Image Digest</span><span class="info-value" id="dig" style="font-family:monospace;font-size:12px;">--</span></div>
+</div>
+
+<div class="alert alert-warning">⚠️ <strong>Lưu ý:</strong> Quá trình nâng cấp sẽ pull Docker image mới nhất và tạo lại container. Dịch vụ có thể bị gián đoạn.</div>
+
+<div class="btn-group" style="margin-bottom:16px;">
+  <button class="btn btn-primary" onclick="doUpgrade()" id="btnUp">🚀 Nâng cấp OpenClaw</button>
+  <button class="btn btn-outline" onclick="showUpdMgr()">📦 Cập nhật Management API</button>
+  <button class="btn btn-outline" onclick="loadVer()">🔄 Làm mới</button>
+</div>
+
+<div id="upProg" style="display:none;">
+  <div class="card">
+    <div class="card-title">Tiến trình nâng cấp</div>
+    <div class="progress-bar"><div class="progress-fill" id="upBar" style="width:0%"></div></div>
+    <p id="upStat" style="font-size:13px;color:var(--gray-600);">Đang xử lý...</p>
+    <div class="log-viewer" id="upLog" style="max-height:250px;"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="updMgrModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">Cập nhật Management API?</h3><button class="modal-close" onclick="closeModal('updMgrModal')">&times;</button></div>
+    <div class="modal-body"><p>Hệ thống sẽ tự động cập nhật server.js, docker-compose.yml và các file config template mới.</p><p style="margin-top:8px;">Dịch vụ có thể bị gián đoạn trong quá trình cập nhật.</p></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('updMgrModal')">Huỷ</button><button class="btn btn-primary" onclick="updMgr()">Xác nhận cập nhật</button></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', loadVer);
+async function loadVer(){try{const i=await api('/api/version/info');document.getElementById('ver').textContent=i.version||'--';document.getElementById('img').textContent=i.dockerImage||'--';document.getElementById('dig').textContent=i.imageDigest||'--';}catch(e){showToast(e.message,'error');}}
+async function doUpgrade(){if(!confirm('Nâng cấp OpenClaw?'))return;document.getElementById('upProg').style.display='';document.getElementById('btnUp').disabled=true;try{const r=await api('/api/version/upgrade',{method:'POST'});pollJobStatus(r.jobId,'upBar','upStat','upLog',()=>{document.getElementById('btnUp').disabled=false;showToast('Thành công!','success');loadVer();},(e)=>{document.getElementById('btnUp').disabled=false;showToast('Lỗi: '+e,'error');});}catch(e){document.getElementById('btnUp').disabled=false;showToast(e.message,'error');}}
+function showUpdMgr(){openModal('updMgrModal');}
+async function updMgr(){closeModal('updMgrModal');try{await api('/api/version/update-manager',{method:'POST'});showToast('Đang cập nhật...','success');}catch(e){showToast(e.message,'error');}}
+</script>
+
+<%- include('partials/footer') %>

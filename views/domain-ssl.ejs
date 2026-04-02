@@ -1,0 +1,72 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Tên miền & SSL</h1>
+<p class="page-subtitle">Cấu hình tên miền và chứng chỉ SSL cho OpenClaw</p>
+
+<div class="alert alert-info">
+  <span class="alert-icon">ℹ️</span>
+  <span>Vui lòng trỏ tên miền về IP <strong id="serverIP">--</strong> trước khi thực hiện thao tác.</span>
+</div>
+
+<div class="card">
+  <div class="info-row">
+    <span class="info-label">Tên miền hiện tại</span>
+    <span class="info-value" id="curDomain">--</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">SSL</span>
+    <span class="info-value" id="sslStat">--</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Cập nhật tên miền</div>
+  <div class="form-group">
+    <label class="form-label">Tên miền mới</label>
+    <input type="text" id="newDomain" class="form-input" placeholder="openclaw.example.com">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Email (cho Let's Encrypt)</label>
+    <input type="email" id="sslEmail" class="form-input" placeholder="admin@example.com">
+  </div>
+  <div id="dnsResult" style="margin-bottom:12px;display:none;"></div>
+  <div class="btn-group">
+    <button class="btn btn-outline" onclick="chkDNS()">🔍 Kiểm tra DNS</button>
+    <button class="btn btn-primary" onclick="updDomain()">🌐 Cập nhật tên miền</button>
+  </div>
+  <div class="alert alert-warning" style="margin-top:16px;">
+    <span class="alert-icon">⚠️</span>
+    <div><strong>Lưu ý:</strong> Việc thay đổi tên miền sẽ cấu hình lại SSL và khởi động lại dịch vụ. DNS phải trỏ đúng IP trước khi thay đổi.</div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', loadDI);
+async function loadDI() {
+  try {
+    const i = await api('/api/domain/info');
+    document.getElementById('curDomain').textContent = i.domain || '(chưa cấu hình)';
+    document.getElementById('serverIP').textContent = i.ipAddress || '--';
+    document.getElementById('sslStat').innerHTML = i.sslEnabled ? '<span class="badge badge-success">✓ Đã kích hoạt</span>' : '<span class="badge badge-gray">Chưa kích hoạt</span>';
+    if (i.domain) document.getElementById('newDomain').value = i.domain;
+    if (i.email) document.getElementById('sslEmail').value = i.email;
+  } catch(e) { showToast(e.message,'error'); }
+}
+async function chkDNS() {
+  const d = document.getElementById('newDomain').value.trim();
+  if (!d) return showToast('Nhập tên miền','warning');
+  try {
+    const r = await api('/api/domain/check-dns',{method:'POST',body:{domain:d}});
+    const el = document.getElementById('dnsResult'); el.style.display='';
+    el.innerHTML = r.matches ? '<div class="alert alert-success">✅ DNS đã trỏ đúng về IP '+r.expectedIP+'</div>' : '<div class="alert alert-danger">❌ DNS chưa trỏ đúng! IP mong đợi: '+r.expectedIP+'. A Records: '+(r.aRecords.join(', ')||'không có')+'</div>';
+  } catch(e) { showToast(e.message,'error'); }
+}
+async function updDomain() {
+  const d = document.getElementById('newDomain').value.trim(), e = document.getElementById('sslEmail').value.trim();
+  if (!d) return showToast('Nhập tên miền','warning');
+  if (!confirm('Cập nhật domain thành '+d+'?')) return;
+  try { await api('/api/domain/update',{method:'POST',body:{domain:d,email:e}}); showToast('Đang cập nhật...','success'); setTimeout(loadDI,5000); } catch(e) { showToast(e.message,'error'); }
+}
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,27 @@
+[Unit]
+Description=OpenClaw Manager Web UI
+Documentation=https://github.com/openclaw/openclaw
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/openclaw-manager
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-manager
+
+# Environment
+Environment=NODE_ENV=production
+EnvironmentFile=-/opt/openclaw-manager/.env
+
+# Security hardening
+NoNewPrivileges=false
+ProtectSystem=false
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target

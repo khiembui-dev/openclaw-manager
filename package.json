@@ -1,0 +1,35 @@
+{
+  "name": "openclaw-manager",
+  "version": "1.0.0",
+  "description": "OpenClaw Management Web UI - Install, configure and manage OpenClaw on VPS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node --watch server.js",
+    "setup": "node src/setup.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "ejs": "^3.1.10",
+    "better-sqlite3": "^11.3.0",
+    "bcryptjs": "^2.4.3",
+    "express-session": "^1.18.0",
+    "connect-sqlite3": "^0.9.15",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.4.0",
+    "csurf": "^1.11.0",
+    "cookie-parser": "^1.4.6",
+    "uuid": "^10.0.0",
+    "winston": "^3.14.0",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3",
+    "ws": "^8.18.0",
+    "archiver": "^7.0.1",
+    "extract-zip": "^2.0.1"
+  },
+  "license": "MIT",
+  "author": "OpenClaw Manager"
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thiết lập ban đầu - OpenClaw Manager</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-box">
+      <div class="login-logo">
+        <div style="display:inline-flex;align-items:center;gap:10px;">
+          <div class="logo-icon" style="width:36px;height:36px;font-size:20px;">OC</div>
+          <span>OpenClaw Manager</span>
+        </div>
+      </div>
+
+      <p style="text-align:center;color:var(--gray-500);margin-bottom:20px;">
+        Tạo tài khoản quản trị viên đầu tiên
+      </p>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger">
+          <span class="alert-icon">⚠️</span>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/auth/setup">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="form-group">
+          <label class="form-label">Tên đăng nhập</label>
+          <input type="text" name="username" class="form-input" placeholder="admin" required autofocus>
+          <p class="form-hint">3-50 ký tự: chữ, số, dấu gạch ngang</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mật khẩu</label>
+          <input type="password" name="password" class="form-input" placeholder="Ít nhất 8 ký tự" required minlength="8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Xác nhận mật khẩu</label>
+          <input type="password" name="confirmPassword" class="form-input" placeholder="Nhập lại mật khẩu" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+          Tạo tài khoản
+        </button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

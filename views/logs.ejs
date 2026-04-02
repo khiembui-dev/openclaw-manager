@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Nhật ký hệ thống</h1>
+<p class="page-subtitle">Xem log hoạt động của OpenClaw và Manager</p>
+
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+  <button class="btn btn-primary btn-sm" onclick="loadL('openclaw')" id="bOC">OpenClaw</button>
+  <button class="btn btn-outline btn-sm" onclick="loadL('manager')" id="bMgr">Manager</button>
+  <button class="btn btn-outline btn-sm" onclick="loadL('install')" id="bInst">Cài đặt</button>
+  <button class="btn btn-outline btn-sm" onclick="loadL('audit')" id="bAud">Audit</button>
+  <div style="flex:1;"></div>
+  <button class="btn btn-outline btn-sm" onclick="loadL(curT)">🔄 Làm mới</button>
+  <button class="btn btn-outline btn-sm" onclick="dlLog()">💾 Tải log</button>
+</div>
+
+<div class="card" style="padding:0;">
+  <div class="log-viewer" id="logC" style="max-height:600px;border-radius:var(--radius);">Chọn loại log...</div>
+</div>
+
+<script>
+let curT='openclaw',curLog='';
+document.addEventListener('DOMContentLoaded',()=>loadL('openclaw'));
+async function loadL(t){
+  curT=t;
+  ['bOC','bMgr','bInst','bAud'].forEach(id=>document.getElementById(id).className='btn btn-outline btn-sm');
+  const m={openclaw:'bOC',manager:'bMgr',install:'bInst',audit:'bAud'};
+  document.getElementById(m[t]).className='btn btn-primary btn-sm';
+  const el=document.getElementById('logC'); el.textContent='Đang tải...';
+  try{
+    if(t==='audit'){const ls=await api('/api/logs/audit');curLog=ls.map(l=>'['+l.created_at+'] '+l.action+' - '+(l.details||'')+' (IP: '+(l.ip_address||'')+')').join('\n')||'Không có';}
+    else{const r=await api('/api/logs/'+t);curLog=r.logs||'Không có log';}
+    el.textContent=curLog;el.scrollTop=el.scrollHeight;
+  }catch(e){el.textContent='Lỗi: '+e.message;}
+}
+function dlLog(){const b=new Blob([curLog],{type:'text/plain'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='openclaw-'+curT+'-'+new Date().toISOString().slice(0,10)+'.log';a.click();URL.revokeObjectURL(u);}
+</script>
+
+<%- include('partials/footer') %>

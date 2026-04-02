@@ -1,0 +1,93 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Tổng quan</h1>
+<p class="page-subtitle">Trạng thái tổng hợp hệ thống OpenClaw</p>
+
+<div class="dashboard-grid" id="dashboardGrid">
+  <div class="stat-card">
+    <div class="stat-label">Trạng thái OpenClaw</div>
+    <div class="stat-value" id="statStatus">--</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">CPU</div>
+    <div class="stat-value" id="statCpu">--%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">RAM</div>
+    <div class="stat-value" id="statRam">--%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Disk</div>
+    <div class="stat-value" id="statDisk">--%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">AI Provider</div>
+    <div class="stat-value" id="statProvider" style="font-size:16px;">--</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Agents</div>
+    <div class="stat-value" id="statAgents">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Kênh kết nối</div>
+    <div class="stat-value" id="statChannels">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Domain</div>
+    <div class="stat-value" id="statDomain" style="font-size:14px;">--</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Thao tác nhanh</div>
+  <div class="btn-group">
+    <a href="/service" class="btn btn-primary">📋 Thông tin dịch vụ</a>
+    <a href="/install" class="btn btn-primary" id="btnInstall" style="display:none;">🚀 Cài đặt OpenClaw</a>
+    <a href="/ai-config" class="btn btn-outline">🤖 Cấu hình AI</a>
+    <a href="/channels" class="btn btn-outline">🔗 Kênh kết nối</a>
+    <a href="/logs" class="btn btn-outline">📝 Nhật ký</a>
+  </div>
+</div>
+
+<div class="card" id="healthCard">
+  <div class="card-title">Kiểm tra sức khoẻ</div>
+  <div id="healthContent"><p style="color:var(--gray-500)">Đang tải...</p></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => { loadDashboard(); setInterval(loadDashboard, 15000); });
+
+async function loadDashboard() {
+  try {
+    const [svc, sys] = await Promise.all([api('/api/service/info'), api('/api/system/info')]);
+    const sm = { running:'Hoạt động', stopped:'Đã dừng', error:'Lỗi', not_installed:'Chưa cài', installing:'Đang cài...' };
+    const el = document.getElementById('statStatus');
+    el.textContent = sm[svc.status] || svc.status;
+    el.style.color = svc.status === 'running' ? 'var(--success)' : svc.status === 'stopped' ? 'var(--danger)' : 'var(--warning)';
+    if (svc.status === 'not_installed') document.getElementById('btnInstall').style.display = '';
+    if (sys) {
+      document.getElementById('statCpu').textContent = (sys.cpu?.usagePercent||0) + '%';
+      document.getElementById('statRam').textContent = (sys.memory?.percent||0) + '%';
+      document.getElementById('statDisk').textContent = (sys.disk?.percent||0) + '%';
+    }
+    document.getElementById('statProvider').textContent = svc.provider || '--';
+    document.getElementById('statAgents').textContent = svc.agentCount || 0;
+    document.getElementById('statChannels').textContent = svc.channelCount || 0;
+    document.getElementById('statDomain').textContent = svc.domain || svc.ipAddress || '--';
+
+    try {
+      const h = await api('/api/service/health');
+      const hEl = document.getElementById('healthContent');
+      if (svc.status === 'not_installed') {
+        hEl.innerHTML = '<div class="alert alert-info">ℹ️ OpenClaw chưa được cài đặt. <a href="/install">Cài đặt ngay</a></div>';
+      } else {
+        const checks = h.checks || {};
+        const items = [{k:'container',l:'Container'},{k:'gateway',l:'Gateway'},{k:'reverseProxy',l:'Reverse Proxy'},{k:'ssl',l:'SSL'},{k:'disk',l:'Disk'}];
+        hEl.innerHTML = items.map(i => '<div class="info-row"><span class="info-label">'+i.l+'</span><span class="badge '+(checks[i.k]?'badge-success':'badge-danger')+'">'+(checks[i.k]?'✓ OK':'✗ Lỗi')+'</span></div>').join('');
+      }
+    } catch(e) {}
+  } catch (err) { console.error(err); }
+}
+</script>
+
+<%- include('partials/footer') %>

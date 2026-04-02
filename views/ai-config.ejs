@@ -1,0 +1,169 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Cấu hình AI Provider</h1>
+<p class="page-subtitle">Quản lý provider, model và API key cho OpenClaw</p>
+
+<div class="card">
+  <div class="info-row">
+    <span class="info-label">Provider hiện tại</span>
+    <span class="info-value" id="curProvider">--</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Model hiện tại</span>
+    <span class="info-value" id="curModel">--</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Thay đổi Provider & Model</div>
+  <p class="card-subtitle">Chọn AI provider rồi cấu hình API key ở form bên dưới trước.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Provider</label>
+      <select id="selProvider" class="form-select" onchange="onPChange()"><option value="">-- Chọn --</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Model</label>
+      <select id="selModel" class="form-select"><option value="">-- Chọn --</option></select>
+    </div>
+  </div>
+  <div class="form-group">
+    <input type="text" id="customModel" class="form-input" placeholder="Hoặc nhập model thủ công" style="margin-top:-8px;">
+  </div>
+  <button class="btn btn-primary" onclick="savePM()">💾 Lưu cấu hình</button>
+</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="card-title" style="margin:0;">Custom Providers</div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('cpModal')">+ Thêm</button>
+  </div>
+  <p class="card-subtitle">Nhà cung cấp AI tự chỉnh (OpenAI-compatible)</p>
+  <div id="cpList"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Cập nhật API Key</div>
+  <div class="form-group">
+    <label class="form-label">Provider</label>
+    <select id="keyProv" class="form-select"><option value="">-- Chọn --</option></select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">API Key</label>
+    <input type="password" id="keyVal" class="form-input" placeholder="Nhập API key mới">
+  </div>
+  <button class="btn btn-primary" onclick="addKey()">Lưu API Key</button>
+  <div style="margin-top:16px;"><div class="card-title">API Keys</div><div id="keyList"></div></div>
+</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="card-title" style="margin:0;">ChatGPT OAuth (OpenAI Codex)</div>
+    <button class="btn btn-primary btn-sm" id="oaBtn" onclick="startOA()">🔗 Kết nối ChatGPT</button>
+  </div>
+  <p class="card-subtitle">Kết nối tài khoản ChatGPT qua OAuth2 PKCE</p>
+  <div id="oaStat"></div>
+  <div id="oaFlow" style="display:none;">
+    <div class="alert alert-warning">1️⃣ <strong>Mở link đăng nhập:</strong> Nhấn vào link dưới để mở trang đăng nhập ChatGPT.</div>
+    <a id="oaLink" href="#" target="_blank" class="btn btn-outline" style="margin-bottom:12px;">🔗 Mở trang đăng nhập ChatGPT</a>
+    <div class="alert alert-warning">2️⃣ <strong>Dán Redirect URL:</strong> Sau khi đăng nhập, copy toàn bộ URL redirect và dán vào đây.</div>
+    <div class="form-group"><input type="text" id="oaCallback" class="form-input" placeholder="http://localhost/callback?code=..."></div>
+    <div class="form-group">
+      <label class="form-label">Chọn Model</label>
+      <select id="oaModel" class="form-select">
+        <option value="gpt-4o">GPT-4o (mặc định)</option><option value="gpt-4o-mini">GPT-4o Mini</option>
+        <option value="gpt-4.5">GPT-4.5</option><option value="o1">o1</option><option value="o1-mini">o1-mini</option>
+        <option value="o3">o3</option><option value="o3-mini">o3-mini</option><option value="o4-mini">o4-mini</option>
+      </select>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-outline" onclick="document.getElementById('oaFlow').style.display='none'">Huỷ</button>
+      <button class="btn btn-primary" onclick="completeOA()">Hoàn thành kết nối</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cpModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">Thêm Custom Provider</h3><button class="modal-close" onclick="closeModal('cpModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Tên</label><input type="text" id="cpName" class="form-input" placeholder="My LLM"></div>
+      <div class="form-group"><label class="form-label">Base URL</label><input type="text" id="cpUrl" class="form-input" placeholder="https://api.example.com/v1"></div>
+      <div class="form-group"><label class="form-label">API Key (tùy chọn)</label><input type="password" id="cpKey" class="form-input"></div>
+      <div class="form-group"><label class="form-label">Model mặc định</label><input type="text" id="cpModel" class="form-input"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('cpModal')">Huỷ</button>
+      <button class="btn btn-primary" onclick="addCP()">Thêm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let ac = {};
+document.addEventListener('DOMContentLoaded', loadAI);
+
+async function loadAI() {
+  try {
+    ac = await api('/api/ai/config');
+    document.getElementById('curProvider').textContent = ac.provider||'--';
+    document.getElementById('curModel').textContent = ac.model||'--';
+    const sp = document.getElementById('selProvider'), kp = document.getElementById('keyProv');
+    sp.innerHTML = '<option value="">-- Chọn --</option>';
+    kp.innerHTML = '<option value="">-- Chọn --</option>';
+    (ac.providers||[]).forEach(p => {
+      sp.innerHTML += '<option value="'+p.id+'"'+(p.id===ac.provider?' selected':'')+'>'+p.name+'</option>';
+      if(p.envKey) kp.innerHTML += '<option value="'+p.id+'">'+p.name+'</option>';
+    });
+    onPChange();
+    // Keys
+    const kl = document.getElementById('keyList');
+    if (!ac.apiKeys?.length) { kl.innerHTML='<p style="color:var(--gray-500);font-size:13px;">Chưa có API key</p>'; }
+    else {
+      let h='<table><thead><tr><th>Provider</th><th>Key</th><th>Mặc định</th><th></th></tr></thead><tbody>';
+      ac.apiKeys.forEach(k=>{h+='<tr><td>'+k.provider+'</td><td style="font-family:monospace;font-size:12px;">'+k.keyMasked+'</td><td>'+(k.isDefault?'<span class="badge badge-success">Mặc định</span>':'<button class="btn btn-sm btn-outline" onclick="setDK('+k.id+')">Đặt</button>')+'</td><td><button class="btn btn-sm btn-danger" onclick="delK('+k.id+')">Xoá</button></td></tr>';});
+      h+='</tbody></table>'; kl.innerHTML=h;
+    }
+    // Custom providers
+    const cl = document.getElementById('cpList');
+    if (!ac.customProviders?.length) { cl.innerHTML='<p style="color:var(--gray-500);font-size:13px;">Chưa có</p>'; }
+    else { cl.innerHTML = ac.customProviders.map(p=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100);"><div><strong>'+p.name+'</strong><br><span style="font-size:12px;color:var(--gray-500);">'+p.baseUrl+'</span></div><button class="btn btn-sm btn-danger" onclick="delCP('+p.id+')">Xoá</button></div>').join(''); }
+    // OAuth
+    const os = document.getElementById('oaStat');
+    if (ac.oauthStatus==='connected') { os.innerHTML='<div class="alert alert-success">✅ Đã kết nối. Model: <strong>'+(ac.oauthModel||'gpt-4o')+'</strong></div>'; document.getElementById('oaBtn').textContent='🔌 Ngắt kết nối'; document.getElementById('oaBtn').onclick=disOA; }
+    else { os.innerHTML='<p style="color:var(--gray-500);font-size:13px;">Chưa kết nối.</p>'; }
+  } catch(e) { showToast(e.message,'error'); }
+}
+function onPChange() {
+  const p=document.getElementById('selProvider').value, ms=(ac.models||{})[p]||[], sel=document.getElementById('selModel');
+  sel.innerHTML='<option value="">-- Chọn --</option>'; ms.forEach(m=>{sel.innerHTML+='<option value="'+m+'"'+(m===ac.model?' selected':'')+'>'+m+'</option>';});
+}
+async function savePM() {
+  const p=document.getElementById('selProvider').value, m=document.getElementById('customModel').value.trim()||document.getElementById('selModel').value;
+  if(!p||!m) return showToast('Chọn provider và model','warning');
+  try { await api('/api/ai/provider-model',{method:'POST',body:{provider:p,model:m}}); showToast('Đã lưu','success'); loadAI(); } catch(e){showToast(e.message,'error');}
+}
+async function addKey() {
+  const p=document.getElementById('keyProv').value, k=document.getElementById('keyVal').value.trim();
+  if(!p||!k) return showToast('Chọn provider và nhập key','warning');
+  try { await api('/api/ai/api-key',{method:'POST',body:{provider:p,apiKey:k}}); document.getElementById('keyVal').value=''; showToast('Đã lưu','success'); loadAI(); } catch(e){showToast(e.message,'error');}
+}
+async function delK(id) { if(!confirm('Xoá key?')) return; try{await api('/api/ai/api-key/'+id,{method:'DELETE'});loadAI();}catch(e){showToast(e.message,'error');} }
+async function setDK(id) { try{await api('/api/ai/api-key/'+id+'/default',{method:'POST'});loadAI();}catch(e){showToast(e.message,'error');} }
+async function addCP() {
+  const n=document.getElementById('cpName').value.trim(),u=document.getElementById('cpUrl').value.trim(),k=document.getElementById('cpKey').value.trim(),m=document.getElementById('cpModel').value.trim();
+  if(!n||!u) return showToast('Nhập tên và URL','warning');
+  try { await api('/api/ai/custom-provider',{method:'POST',body:{name:n,baseUrl:u,apiKey:k,defaultModel:m}}); closeModal('cpModal'); showToast('Đã thêm','success'); loadAI(); } catch(e){showToast(e.message,'error');}
+}
+async function delCP(id) { if(!confirm('Xoá?')) return; try{await api('/api/ai/custom-provider/'+id,{method:'DELETE'});loadAI();}catch(e){showToast(e.message,'error');} }
+function startOA() { document.getElementById('oaFlow').style.display=''; document.getElementById('oaLink').href='https://chatgpt.com/api/auth/oauth/authorize?client_id=openclaw&response_type=code&redirect_uri=http://localhost/callback'; }
+async function completeOA() {
+  const cb=document.getElementById('oaCallback').value.trim(), m=document.getElementById('oaModel').value;
+  if(!cb) return showToast('Dán URL callback','warning');
+  let code=cb; try{code=new URL(cb).searchParams.get('code')||cb;}catch(e){}
+  try { await api('/api/ai/oauth/save',{method:'POST',body:{accessToken:code,model:m}}); document.getElementById('oaFlow').style.display='none'; showToast('Kết nối thành công!','success'); loadAI(); } catch(e){showToast(e.message,'error');}
+}
+async function disOA() { if(!confirm('Ngắt kết nối?')) return; try{await api('/api/ai/oauth/disconnect',{method:'POST'});showToast('Đã ngắt','success');loadAI();}catch(e){showToast(e.message,'error');} }
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,89 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Multi-Agent</h1>
+<p class="page-subtitle">Quản lý các agent và routing bindings</p>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="card-title" style="margin:0;">Agents</div>
+    <button class="btn btn-primary btn-sm" onclick="showCreate()">+ Tạo Agent</button>
+  </div>
+  <div id="agList"></div>
+</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="card-title" style="margin:0;">Routing Bindings</div>
+    <button class="btn btn-primary btn-sm" onclick="showBind()">+ Thêm Binding</button>
+  </div>
+  <p class="card-subtitle">Gán kênh tin nhắn tới agent cụ thể. Mặc định sẽ dùng agent mặc định.</p>
+  <div id="bindList"></div>
+</div>
+
+<div class="modal-overlay" id="agModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title" id="agTitle">Tạo Agent mới</h3><button class="modal-close" onclick="closeModal('agModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-group"><label class="form-label">Tên Agent</label><input type="text" id="agName" class="form-input" placeholder="vd: Work Agent, Support Bot..."></div>
+      <div class="form-group"><label class="form-label">Model (để trống = mặc định)</label><input type="text" id="agModel" class="form-input" placeholder="vd: anthropic/claude-sonnet-4-6"></div>
+      <div class="form-group"><label class="form-label">Provider</label><input type="text" id="agProv" class="form-input" placeholder="vd: openai, anthropic"></div>
+      <div class="form-group"><label class="form-label">System Prompt</label><textarea id="agPrompt" class="form-textarea" placeholder="Hướng dẫn cho agent..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('agModal')">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveAg()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bindModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title">Thêm Routing Binding</h3><button class="modal-close" onclick="closeModal('bindModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Kênh</label><select id="bindCh" class="form-select"><option value="telegram">Telegram</option><option value="discord">Discord</option><option value="slack">Slack</option><option value="zalo">Zalo</option></select></div>
+      <div class="form-group"><label class="form-label">Pattern</label><input type="text" id="bindPat" class="form-input" placeholder="* hoặc ID"></div>
+      <div class="form-group"><label class="form-label">Agent</label><select id="bindAg" class="form-select"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('bindModal')">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveBind()">Thêm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let ags=[];
+document.addEventListener('DOMContentLoaded', loadAg);
+async function loadAg() {
+  try {
+    ags = await api('/api/agents');
+    const el=document.getElementById('agList');
+    if(!ags.length){el.innerHTML='<p style="color:var(--gray-500)">Không có agent</p>';return;}
+    el.innerHTML = ags.map(a=>{
+      let h='<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--gray-100);">';
+      h+='<div><strong>'+a.name+'</strong> ';
+      if(a.is_main) h+='<span class="badge badge-info">main</span> ';
+      if(a.is_default) h+='<span class="badge badge-success">mặc định</span> ';
+      h+='<br><span style="font-size:12px;color:var(--gray-500);">'+(a.model?a.provider+'/'+a.model:'Model mặc định')+'</span></div>';
+      h+='<div class="btn-group">';
+      if(!a.is_default) h+='<button class="btn btn-sm btn-outline" onclick="setDef(\''+a.agent_id+'\')">Mặc định</button>';
+      h+='<button class="btn btn-sm btn-outline" onclick="editAg(\''+a.agent_id+'\')">Sửa</button>';
+      if(!a.is_main) h+='<button class="btn btn-sm btn-danger" onclick="delAg(\''+a.agent_id+'\')">Xoá</button>';
+      return h+'</div></div>';
+    }).join('');
+    loadBind();
+  } catch(e){showToast(e.message,'error');}
+}
+function showCreate(){document.getElementById('agTitle').textContent='Tạo Agent mới';document.getElementById('editId').value='';['agName','agModel','agProv','agPrompt'].forEach(id=>document.getElementById(id).value='');openModal('agModal');}
+function editAg(id){const a=ags.find(x=>x.agent_id===id);if(!a)return;document.getElementById('agTitle').textContent='Sửa Agent';document.getElementById('editId').value=id;document.getElementById('agName').value=a.name||'';document.getElementById('agModel').value=a.model||'';document.getElementById('agProv').value=a.provider||'';document.getElementById('agPrompt').value=a.system_prompt||'';openModal('agModal');}
+async function saveAg(){const id=document.getElementById('editId').value,d={name:document.getElementById('agName').value.trim(),model:document.getElementById('agModel').value.trim()||null,provider:document.getElementById('agProv').value.trim()||null,systemPrompt:document.getElementById('agPrompt').value.trim()||null};if(!d.name)return showToast('Nhập tên','warning');try{if(id)await api('/api/agents/'+id,{method:'PUT',body:d});else await api('/api/agents',{method:'POST',body:d});closeModal('agModal');showToast('Đã lưu','success');loadAg();}catch(e){showToast(e.message,'error');}}
+async function delAg(id){if(!confirm('Xoá agent?'))return;try{await api('/api/agents/'+id,{method:'DELETE'});loadAg();}catch(e){showToast(e.message,'error');}}
+async function setDef(id){try{await api('/api/agents/'+id+'/default',{method:'POST'});loadAg();}catch(e){showToast(e.message,'error');}}
+async function loadBind(){try{const bs=await api('/api/agents/bindings');const el=document.getElementById('bindList');if(!bs.length){el.innerHTML='<p style="color:var(--gray-500);font-size:13px;">Chưa có binding.</p>';return;}let h='<table><thead><tr><th>Kênh</th><th>Pattern</th><th>Agent</th><th></th></tr></thead><tbody>';bs.forEach(b=>{h+='<tr><td>'+b.channel+'</td><td>'+(b.pattern||'*')+'</td><td>'+(b.agent_name||b.agent_id)+'</td><td><button class="btn btn-sm btn-danger" onclick="delBind('+b.id+')">Xoá</button></td></tr>';});el.innerHTML=h+'</tbody></table>';}catch(e){}}
+function showBind(){const s=document.getElementById('bindAg');s.innerHTML='';ags.forEach(a=>{s.innerHTML+='<option value="'+a.agent_id+'">'+a.name+'</option>';});openModal('bindModal');}
+async function saveBind(){const d={channel:document.getElementById('bindCh').value,pattern:document.getElementById('bindPat').value.trim()||'*',agentId:document.getElementById('bindAg').value};try{await api('/api/agents/bindings',{method:'POST',body:d});closeModal('bindModal');loadBind();}catch(e){showToast(e.message,'error');}}
+async function delBind(id){if(!confirm('Xoá?'))return;try{await api('/api/agents/bindings/'+id,{method:'DELETE'});loadBind();}catch(e){showToast(e.message,'error');}}
+</script>
+
+<%- include('partials/footer') %>

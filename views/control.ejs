@@ -1,0 +1,45 @@
+<%- include('partials/header') %>
+
+<h1 class="page-title">Điều khiển dịch vụ</h1>
+<p class="page-subtitle">Khởi động, dừng, khởi động lại hoặc reset OpenClaw</p>
+
+<div class="card">
+  <div class="info-row">
+    <span class="info-label">Trạng thái Container</span>
+    <span class="info-value" id="ctrlStat"><span class="badge badge-gray">Đang tải...</span></span>
+  </div>
+</div>
+
+<div class="btn-group" style="margin-bottom:24px;">
+  <button class="btn btn-primary" onclick="ctrlAct('restart')">🔄 Khởi động lại</button>
+  <button class="btn btn-outline" onclick="ctrlAct('stop')">⏹️ Dừng</button>
+  <button class="btn btn-outline" onclick="ctrlAct('rebuild')">🔨 Rebuild</button>
+  <button class="btn btn-outline" onclick="loadCtrl()">🔃 Làm mới</button>
+</div>
+
+<div id="ctrlLog" style="display:none;">
+  <div class="card" style="padding:0;"><div class="log-viewer" id="ctrlLogC" style="max-height:200px;"></div></div>
+</div>
+
+<div class="danger-zone" style="margin-top:24px;">
+  <h3>⚠️ Vùng nguy hiểm</h3>
+  <p>Reset sẽ xoá toàn bộ dữ liệu & cấu hình, tạo lại từ mặc định. File .env (token) được giữ lại.</p>
+  <div class="form-group" style="max-width:300px;">
+    <label class="form-label">Nhập <strong>RESET</strong> để xác nhận</label>
+    <input type="text" id="rstConf" class="form-input" placeholder="RESET">
+  </div>
+  <div style="margin-bottom:12px;">
+    <label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="keepTk" checked> Giữ Gateway Token</label>
+    <label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="keepDm" checked> Giữ Domain & SSL</label>
+  </div>
+  <button class="btn btn-danger" onclick="doReset()">🗑️ Reset toàn bộ</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{loadCtrl();setInterval(loadCtrl,10000);});
+async function loadCtrl(){try{const i=await api('/api/service/info');const sm={running:{t:'Đang chạy',c:'badge-success'},stopped:{t:'Đã dừng',c:'badge-danger'},error:{t:'Lỗi',c:'badge-danger'},not_installed:{t:'Chưa cài',c:'badge-warning'}};const s=sm[i.status]||{t:i.status,c:'badge-gray'};document.getElementById('ctrlStat').innerHTML='<span class="status-dot '+i.status+'"></span> <span class="badge '+s.c+'">'+s.t+'</span>';}catch(e){}}
+async function ctrlAct(a){const lb={restart:'Khởi động lại',stop:'Dừng',rebuild:'Rebuild'};if(!confirm(lb[a]+' dịch vụ?'))return;try{const r=await api('/api/control/'+a,{method:'POST'});if(a==='stop'){showToast('Đã dừng','success');loadCtrl();}else if(r.jobId){document.getElementById('ctrlLog').style.display='';pollJobStatus(r.jobId,null,null,'ctrlLogC',()=>{showToast(lb[a]+' xong','success');loadCtrl();},(e)=>{showToast(lb[a]+' lỗi: '+e,'error');});}}catch(e){showToast(e.message,'error');}}
+async function doReset(){if(document.getElementById('rstConf').value!=='RESET')return showToast('Nhập RESET','warning');if(!confirm('CHẮC CHẮN? Không thể hoàn tác!'))return;try{await api('/api/control/reset',{method:'POST',body:{confirmation:'RESET',keepToken:document.getElementById('keepTk').checked,keepDomain:document.getElementById('keepDm').checked}});showToast('Đang reset...','warning');setTimeout(()=>location.href='/',5000);}catch(e){showToast(e.message,'error');}}
+</script>
+
+<%- include('partials/footer') %>

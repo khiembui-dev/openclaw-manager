@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - OpenClaw Manager</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <meta name="csrf-token" content="<%= csrfToken %>">
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">OC</div>
+        <span>OpenClaw</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="nav-item <%= page === 'dashboard' ? 'active' : '' %>">
+          <span class="nav-icon">📊</span> Tổng quan
+        </a>
+        <a href="/service" class="nav-item <%= page === 'service' ? 'active' : '' %>">
+          <span class="nav-icon">📋</span> Thông tin dịch vụ
+        </a>
+        <a href="/domain" class="nav-item <%= page === 'domain' ? 'active' : '' %>">
+          <span class="nav-icon">🌐</span> Tên miền & SSL
+        </a>
+        <a href="/ai-config" class="nav-item <%= page === 'ai-config' ? 'active' : '' %>">
+          <span class="nav-icon">🤖</span> Cấu hình AI
+        </a>
+        <a href="/agents" class="nav-item <%= page === 'agents' ? 'active' : '' %>">
+          <span class="nav-icon">👥</span> Multi-Agent
+        </a>
+        <a href="/channels" class="nav-item <%= page === 'channels' ? 'active' : '' %>">
+          <span class="nav-icon">🔗</span> Kênh kết nối
+        </a>
+        <a href="/version" class="nav-item <%= page === 'version' ? 'active' : '' %>">
+          <span class="nav-icon">📦</span> Phiên bản & Nâng cấp
+        </a>
+        <a href="/logs" class="nav-item <%= page === 'logs' ? 'active' : '' %>">
+          <span class="nav-icon">📝</span> Nhật ký hệ thống
+        </a>
+        <a href="/control" class="nav-item <%= page === 'control' ? 'active' : '' %>">
+          <span class="nav-icon">⚙️</span> Điều khiển dịch vụ
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        OpenClaw Manager v<%= config.version %>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-tabs">
+          <a href="/" class="header-tab <%= page === 'dashboard' ? 'active' : '' %>">Tổng quan</a>
+          <a href="/service" class="header-tab <%= ['service','install','domain','ai-config','agents','channels','version','control'].includes(page) ? 'active' : '' %>">OpenClaw</a>
+          <a href="/backup" class="header-tab <%= page === 'backup' ? 'active' : '' %>">Backups</a>
+          <a href="/logs" class="header-tab <%= page === 'logs' ? 'active' : '' %>">Nhật ký</a>
+        </div>
+        <div class="header-right">
+          <span class="header-user"><%= user ? user.username : '' %></span>
+          <a href="/auth/logout" class="btn btn-sm btn-outline">Đăng xuất</a>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="content">

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - OpenClaw Manager</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-box" style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;"><%= code === 404 ? '🔍' : '❌' %></div>
+      <h2 style="margin-bottom:8px;">Lỗi <%= code %></h2>
+      <p style="color:var(--gray-500);margin-bottom:20px;"><%= message %></p>
+      <a href="/" class="btn btn-primary">Về trang chủ</a>
+    </div>
+  </div>
+</body>
+</html>
