@@ -18,18 +18,12 @@ app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
 
-// Security headers - allow Google Fonts
+// Security headers - relaxed for admin panel over HTTP
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
-    },
-  },
+  contentSecurityPolicy: false,        // Disable CSP (was blocking form submissions)
+  crossOriginOpenerPolicy: false,      // Not needed for HTTP admin panel
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
 }));
 
 // Body parsing
