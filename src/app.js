@@ -94,17 +94,18 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
 
-  // Skip CSRF for API routes
+  // Skip CSRF for API routes and auth routes (protected by rate limiting)
   if (req.path.startsWith('/api/')) return next();
+  if (req.path.startsWith('/auth/')) return next();
 
   const token = req.body._csrf || req.headers['x-csrf-token'];
 
-  // If no session or no csrf token stored, allow (first-time setup)
+  // If no session or no csrf token stored, allow
   if (!req.session || !req.session.csrfToken) return next();
 
   if (token && token === req.session.csrfToken) return next();
 
-  // CSRF failed - redirect back with error instead of JSON
+  // CSRF failed - redirect back
   logger.warn('CSRF validation failed for:', req.path);
   return res.redirect('back');
 });
