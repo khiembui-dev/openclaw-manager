@@ -1,390 +1,193 @@
 # OpenClaw Manager
 
-Web UI quản lý, cài đặt và vận hành OpenClaw trên VPS Linux. Thiết kế cho mô hình kinh doanh dịch vụ VPS OpenClaw.
+Web UI quản lý, cài đặt và vận hành **OpenClaw** trên VPS Linux.
+Cài đặt OpenClaw chỉ bằng 1 click - phù hợp cho mô hình kinh doanh dịch vụ VPS.
 
-## Tính năng
+---
 
-- **Cài đặt OpenClaw 1 click** - Tự động cài Docker, pull image, tạo config, khởi chạy container
-- **Thông tin dịch vụ** - Domain, IP, version, status, gateway token, tạo tài khoản
-- **Tên miền & SSL** - Cấu hình domain, tự động cấp SSL Let's Encrypt qua Nginx
-- **Cấu hình AI** - 20+ providers, API key management, custom providers, ChatGPT OAuth
-- **Multi-Agent** - Tạo/sửa/xoá agent, routing bindings theo kênh
-- **Kênh kết nối** - Telegram, Discord, Slack, Zalo với test kết nối
-- **Phiên bản & Nâng cấp** - Pull image mới, rebuild container, update manager
-- **Nhật ký hệ thống** - Xem log OpenClaw, Manager, cài đặt, audit
-- **Điều khiển dịch vụ** - Restart, stop, rebuild, reset toàn bộ
-- **Dashboard tổng quan** - CPU, RAM, Disk, trạng thái tổng hợp
-- **Backup & Restore** - Sao lưu và phục hồi cấu hình
-- **Bảo mật** - Auth session, bcrypt, CSRF, rate limiting, API key encryption (AES-256-GCM)
+## Cài đặt nhanh (1 lệnh)
 
-## Yêu cầu hệ thống
-
-- **OS:** Ubuntu 22.04/24.04, Debian 12
-- **Node.js:** >= 18 (khuyến nghị v22)
-- **RAM:** >= 1GB (2GB cho cả OpenClaw)
-- **Disk:** >= 10GB trống
-- **Quyền:** root hoặc sudo
-
-## Cài đặt nhanh (Production)
-
-### Cách 1: Script tự động
+SSH vào VPS Ubuntu rồi chạy:
 
 ```bash
-# Tải và chạy script cài đặt
+sudo apt-get update && sudo apt-get install -y git curl && \
+git clone https://github.com/khiembui-dev/openclaw-manager.git /opt/openclaw-manager && \
+cd /opt/openclaw-manager && \
 sudo bash scripts/install-manager.sh
 ```
 
-Script sẽ tự động:
-1. Cài Node.js nếu chưa có
-2. Copy mã nguồn vào `/opt/openclaw-manager`
-3. Cài dependencies
-4. Tạo `.env` với secrets ngẫu nhiên
-5. Khởi tạo database
-6. Tạo systemd service
-7. Khởi động manager
+Sau đó mở trình duyệt: `http://IP-VPS:3847`
 
-### Cách 2: Cài thủ công
+---
+
+## Cài đặt từng bước
+
+### Bước 1 - Tải source về VPS
 
 ```bash
-# 1. Copy project vào server
-scp -r . root@your-server:/opt/openclaw-manager
+# SSH vào VPS
+ssh root@IP-VPS
 
-# 2. SSH vào server
-ssh root@your-server
+# Cài git (nếu chưa có)
+apt-get update && apt-get install -y git
 
-# 3. Cài Node.js (nếu chưa có)
-curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-apt-get install -y nodejs
-
-# 4. Cài dependencies
+# Clone từ GitHub
+git clone https://github.com/khiembui-dev/openclaw-manager.git /opt/openclaw-manager
 cd /opt/openclaw-manager
-npm install --production
-
-# 5. Thiết lập
-npm run setup
-# Hoặc thủ công:
-cp .env.example .env
-# Sửa SESSION_SECRET và ENCRYPTION_KEY trong .env
-mkdir -p data/logs
-
-# 6. Cài systemd service
-cp templates/openclaw-manager.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable openclaw-manager
-systemctl start openclaw-manager
-
-# 7. Mở trình duyệt
-echo "URL: http://$(curl -s ifconfig.me):3847"
 ```
 
-### Sau khi cài Manager
-
-1. Mở `http://YOUR_IP:3847`
-2. Tạo tài khoản admin đầu tiên
-3. Vào trang **Tổng quan** hoặc **Thông tin dịch vụ**
-4. Nhấn **Cài đặt OpenClaw** (hoặc vào `/install`)
-5. Nhập domain (tùy chọn), email, nhấn **Cài đặt**
-6. Chờ hoàn tất, sau đó quản lý qua web UI
-
-## Chạy Development
+### Bước 2 - Chạy script cài đặt
 
 ```bash
-# Clone/copy project
-cd openclaw-manager
-
-# Cài dependencies
-npm install
-
-# Setup
-npm run setup
-
-# Chạy dev mode (auto-reload)
-npm run dev
-
-# Mở http://localhost:3847
+sudo bash scripts/install-manager.sh
 ```
 
-## Cấu hình (.env)
+Script tự động:
+1. Cài Node.js 22
+2. Cài npm dependencies
+3. Tạo `.env` với secrets ngẫu nhiên
+4. Khởi tạo database SQLite
+5. Tạo systemd service
+6. Khởi động manager
 
-| Biến | Mô tả | Mặc định |
-|------|--------|----------|
-| `PORT` | Cổng web UI | `3847` |
-| `HOST` | Bind address | `0.0.0.0` |
-| `NODE_ENV` | Environment | `production` |
-| `SESSION_SECRET` | Session encryption key | (random) |
-| `ENCRYPTION_KEY` | API key encryption key (hex) | (random) |
-| `DB_PATH` | SQLite database path | `./data/manager.db` |
-| `LOG_DIR` | Log directory | `./data/logs` |
-| `OPENCLAW_INSTALL_DIR` | OpenClaw install directory | `/opt/openclaw` |
-| `OPENCLAW_IMAGE` | Docker image | `ghcr.io/openclaw/openclaw:latest` |
-| `OPENCLAW_GATEWAY_PORT` | Gateway port | `18789` |
-
-## Cấu trúc project
+### Bước 3 - Mở Web UI
 
 ```
-openclaw-manager/
-├── server.js                 # Entry point
-├── package.json
-├── .env.example              # Environment template
-├── src/
-│   ├── app.js                # Express app setup
-│   ├── config.js             # Configuration
-│   ├── database.js           # SQLite database
-│   ├── crypto.js             # AES-256-GCM encryption
-│   ├── setup.js              # Interactive setup
-│   ├── middleware/
-│   │   └── auth.js           # Authentication & audit
-│   ├── routes/
-│   │   ├── auth.js           # Login/logout/setup
-│   │   ├── pages.js          # Page rendering
-│   │   └── api.js            # REST API (all endpoints)
-│   ├── services/
-│   │   ├── docker.js         # Docker management
-│   │   ├── installer.js      # OpenClaw 1-click install
-│   │   ├── openclaw.js       # OpenClaw operations
-│   │   ├── domain.js         # Domain & SSL
-│   │   ├── ai.js             # AI provider/key management
-│   │   ├── agents.js         # Multi-agent management
-│   │   ├── channels.js       # Channel connections
-│   │   ├── backup.js         # Backup/restore
-│   │   ├── jobs.js           # Job queue
-│   │   └── system.js         # System info (CPU/RAM/Disk)
-│   └── utils/
-│       ├── shell.js          # Safe shell execution
-│       ├── logger.js         # Winston logging
-│       └── validator.js      # Input validation
-├── views/                    # EJS templates
-│   ├── layout.ejs            # Main layout + sidebar
-│   ├── login.ejs / setup.ejs
-│   ├── dashboard.ejs         # Tổng quan
-│   ├── service-info.ejs      # Thông tin dịch vụ
-│   ├── install.ejs           # Cài đặt 1 click
-│   ├── domain-ssl.ejs        # Tên miền & SSL
-│   ├── ai-config.ejs         # Cấu hình AI
-│   ├── multi-agent.ejs       # Multi-Agent
-│   ├── channels.ejs          # Kênh kết nối
-│   ├── version.ejs           # Phiên bản & Nâng cấp
-│   ├── logs.ejs              # Nhật ký hệ thống
-│   ├── control.ejs           # Điều khiển dịch vụ
-│   └── backup.ejs            # Sao lưu & Phục hồi
-├── public/
-│   ├── css/style.css         # Stylesheet
-│   └── js/app.js             # Frontend helpers
-├── templates/
-│   ├── openclaw-manager.service  # systemd unit
-│   └── nginx-manager.conf       # Nginx template
-└── scripts/
-    ├── install-manager.sh    # Quick install
-    ├── update-manager.sh     # Update script
-    ├── backup.sh             # Backup script
-    └── uninstall.sh          # Uninstall script
+http://IP-VPS:3847
 ```
 
-## API Endpoints
+1. Tạo tài khoản admin đầu tiên
+2. Nhấn **Cài đặt OpenClaw** (1 click)
+3. Xong! Quản lý mọi thứ qua web UI
 
-### Auth
-| Method | Path | Mô tả |
-|--------|------|--------|
-| POST | `/auth/login` | Đăng nhập |
-| POST | `/auth/setup` | Tạo admin đầu tiên |
-| GET | `/auth/logout` | Đăng xuất |
-| POST | `/auth/change-password` | Đổi mật khẩu |
+---
 
-### Service
-| Method | Path | Mô tả |
-|--------|------|--------|
-| GET | `/api/service/info` | Thông tin dịch vụ |
-| GET | `/api/service/health` | Health check |
-| POST | `/api/service/token/regenerate` | Tạo mới gateway token |
-| POST | `/api/service/account` | Tạo tài khoản OpenClaw |
+## Yêu cầu VPS
 
-### Installation
-| Method | Path | Mô tả |
-|--------|------|--------|
-| POST | `/api/install` | Cài đặt OpenClaw 1 click |
+| | Tối thiểu | Khuyến nghị |
+|---|---|---|
+| **OS** | Ubuntu 22.04 / 24.04 / Debian 12 | Ubuntu 24.04 |
+| **CPU** | 1 vCPU | 2 vCPU |
+| **RAM** | 2 GB | 4 GB |
+| **Disk** | 25 GB SSD | 40 GB SSD |
+| **Quyền** | root | root |
 
-### Domain & SSL
-| Method | Path | Mô tả |
-|--------|------|--------|
-| GET | `/api/domain/info` | Thông tin domain |
-| POST | `/api/domain/check-dns` | Kiểm tra DNS |
-| POST | `/api/domain/update` | Cập nhật domain + SSL |
+---
 
-### AI Configuration
-| Method | Path | Mô tả |
-|--------|------|--------|
-| GET | `/api/ai/config` | Config AI hiện tại |
-| POST | `/api/ai/provider-model` | Đổi provider/model |
-| POST | `/api/ai/api-key` | Thêm API key |
-| DELETE | `/api/ai/api-key/:id` | Xoá API key |
-| POST | `/api/ai/custom-provider` | Thêm custom provider |
-| POST | `/api/ai/oauth/save` | Lưu ChatGPT OAuth token |
+## Tính năng
 
-### Agents
-| Method | Path | Mô tả |
-|--------|------|--------|
-| GET | `/api/agents` | Danh sách agents |
-| POST | `/api/agents` | Tạo agent |
-| PUT | `/api/agents/:id` | Sửa agent |
-| DELETE | `/api/agents/:id` | Xoá agent |
-| GET | `/api/agents/bindings` | Routing bindings |
-| POST | `/api/agents/bindings` | Thêm binding |
+| Trang | Chức năng |
+|-------|-----------|
+| **Tổng quan** | CPU, RAM, Disk, trạng thái, health check |
+| **Thông tin dịch vụ** | Domain, IP, version, gateway token, tạo tài khoản |
+| **Cài đặt 1 Click** | Tự động Docker + pull image + config + start |
+| **Tên miền & SSL** | DNS check, Nginx, Let's Encrypt tự động |
+| **Cấu hình AI** | 20+ providers, API key, custom provider, ChatGPT OAuth |
+| **Multi-Agent** | Tạo agent, routing bindings theo kênh |
+| **Kênh kết nối** | Telegram, Discord, Slack, Zalo + test kết nối |
+| **Phiên bản** | Nâng cấp OpenClaw, cập nhật Manager |
+| **Nhật ký** | Log OpenClaw, Manager, cài đặt, audit |
+| **Điều khiển** | Restart, stop, rebuild, reset toàn bộ |
+| **Backup** | Sao lưu & phục hồi cấu hình |
 
-### Channels
-| Method | Path | Mô tả |
-|--------|------|--------|
-| GET | `/api/channels` | Danh sách kênh |
-| POST | `/api/channels/:type` | Cập nhật kênh |
-| POST | `/api/channels/:type/test` | Test kết nối |
+---
 
-### Version & Control
-| Method | Path | Mô tả |
-|--------|------|--------|
-| POST | `/api/version/upgrade` | Nâng cấp OpenClaw |
-| POST | `/api/version/update-manager` | Cập nhật Manager |
-| POST | `/api/control/restart` | Restart container |
-| POST | `/api/control/stop` | Stop container |
-| POST | `/api/control/rebuild` | Rebuild container |
-| POST | `/api/control/reset` | Reset toàn bộ |
-
-### Backup & Logs
-| Method | Path | Mô tả |
-|--------|------|--------|
-| GET | `/api/backup/list` | Danh sách backup |
-| POST | `/api/backup/create` | Tạo backup |
-| GET | `/api/logs/openclaw` | Log OpenClaw |
-| GET | `/api/logs/manager` | Log Manager |
-
-## Quản lý Service
+## Quản lý service
 
 ```bash
-# Xem trạng thái
+# Trạng thái
 systemctl status openclaw-manager
 
 # Restart
 systemctl restart openclaw-manager
 
-# Xem log realtime
+# Log realtime
 journalctl -u openclaw-manager -f
 
-# Stop
+# Dừng
 systemctl stop openclaw-manager
 ```
 
-## Cập nhật Manager
+---
+
+## Cập nhật
 
 ```bash
-# Cách 1: Script
-sudo bash /opt/openclaw-manager/scripts/update-manager.sh
-
-# Cách 2: Thủ công
 cd /opt/openclaw-manager
 git pull origin main
 npm install --production
 systemctl restart openclaw-manager
-
-# Cách 3: Từ Web UI
-# Vào Phiên bản & Nâng cấp -> Cập nhật Management API
 ```
+
+Hoặc cập nhật từ Web UI: **Phiên bản & Nâng cấp** → **Cập nhật Management API**
+
+---
 
 ## Backup
 
 ```bash
-# Cách 1: Script
+# Qua script
 sudo bash /opt/openclaw-manager/scripts/backup.sh
 
-# Cách 2: Từ Web UI
-# Vào Sao lưu & Phục hồi -> Tạo bản sao lưu
+# Hoặc qua Web UI: Backups → Tạo bản sao lưu
 ```
 
-## Debug lỗi
+---
 
-### Manager không khởi động
-```bash
-journalctl -u openclaw-manager --no-pager -n 50
-cat /opt/openclaw-manager/data/logs/error.log
-```
+## Xử lý sự cố
 
-### OpenClaw container lỗi
-```bash
-cd /opt/openclaw
-docker compose logs --tail 50
-docker compose ps
-```
+| Vấn đề | Lệnh kiểm tra |
+|--------|---------------|
+| Manager không chạy | `systemctl status openclaw-manager` |
+| Xem log lỗi | `journalctl -u openclaw-manager -n 50` |
+| OpenClaw lỗi | `cd /opt/openclaw && docker compose logs --tail 50` |
+| Port bị chiếm | `ss -tlnp \| grep ':3847'` |
+| SSL lỗi | `certbot renew --force-renewal` |
+| Quên mật khẩu | Xoá `data/manager.db` rồi restart |
+| Disk đầy | `docker system prune -a` |
 
-### Port bị chiếm
-```bash
-ss -tlnp | grep ':3847'
-ss -tlnp | grep ':18789'
-```
+---
 
-### SSL lỗi
-```bash
-# Kiểm tra certificate
-openssl s_client -connect your-domain.com:443 -servername your-domain.com
-# Thử cấp lại
-certbot renew --force-renewal
-```
+## Cấu hình (.env)
 
-### Database lỗi
-```bash
-# Backup rồi xoá database (sẽ tạo mới khi restart)
-cp /opt/openclaw-manager/data/manager.db /tmp/manager.db.bak
-rm /opt/openclaw-manager/data/manager.db
-systemctl restart openclaw-manager
-```
+File: `/opt/openclaw-manager/.env`
 
-## Checklist Test
+| Biến | Mặc định | Mô tả |
+|------|----------|-------|
+| `PORT` | `3847` | Cổng web UI |
+| `OPENCLAW_INSTALL_DIR` | `/opt/openclaw` | Thư mục cài OpenClaw |
+| `OPENCLAW_IMAGE` | `ghcr.io/openclaw/openclaw:latest` | Docker image |
+| `OPENCLAW_GATEWAY_PORT` | `18789` | Cổng Gateway |
+| `LOG_LEVEL` | `info` | Mức log (`debug` để xem chi tiết) |
 
-| Test case | Kết quả mong đợi |
-|-----------|-------------------|
-| Install mới trên Ubuntu 24.04 | Cài thành công, web UI hoạt động |
-| Cài OpenClaw 1 click | Docker + OpenClaw chạy, health OK |
-| Domain đúng + SSL | Nginx config, certbot cấp cert |
-| Domain sai (DNS chưa trỏ) | Alert đỏ, không cho cấp SSL |
-| API key đúng | Lưu thành công, sync vào .env |
-| API key sai | Cảnh báo, vẫn lưu (user tự kiểm tra) |
-| Tạo agent | Agent xuất hiện, sync vào config |
-| Routing binding | Kênh -> agent mapping hoạt động |
-| Telegram token đúng | Test kết nối OK, hiện bot username |
-| Container down | Status đỏ, gợi ý xem log |
-| Rebuild | Container tạo lại, health check OK |
-| Upgrade | Pull image mới, recreate, health OK |
-| Upgrade fail | Rollback suggestion, log chi tiết |
-| Reset RESET | Xoá data, tạo lại mặc định |
-| Backup + Restore | File tar.gz tạo, restore config OK |
-| Login sai 10 lần | Rate limit, chặn 1 phút |
-| XSS trong form | HTML escaped, không execute |
+> Sau khi sửa: `systemctl restart openclaw-manager`
 
-## Kiến trúc & Thiết kế
+---
 
-### Tương tác với OpenClaw
+## Bảo mật
 
-Manager tương tác với OpenClaw qua:
-1. **Docker Compose** - Start/stop/restart/rebuild containers
-2. **Config file** (`~/.openclaw/openclaw.json`) - Provider, model, agent, channel config
-3. **Environment file** (`.env`) - API keys, tokens, ports
-4. **Health endpoints** (`/healthz`, `/readyz`) - Kiểm tra hoạt động
-5. **Container logs** - `docker compose logs`
-
-Manager **KHÔNG** trực tiếp sửa source code OpenClaw hay chạy OpenClaw CLI trong container. Thay vào đó, nó quản lý cấu hình và Docker lifecycle.
-
-### Bảo mật
-
-- Passwords: bcrypt (cost 12)
+- Mật khẩu: bcrypt (cost 12)
 - API keys: AES-256-GCM encrypted at rest
-- Sessions: SQLite-backed, httpOnly, sameSite
-- CSRF: Double-submit cookie pattern
-- Rate limiting: 10 attempts/minute for login
-- Input validation: Whitelist-based
-- Shell execution: Command whitelist, sanitized inputs
-- Secrets: Never logged plaintext, masked in UI
+- Session: httpOnly, sameSite, SQLite-backed
+- CSRF protection
+- Rate limiting: 10 lần/phút cho login
+- Shell command whitelist
+- Audit log cho mọi thao tác nhạy cảm
 
-### Điểm cần lưu ý
+---
 
-- **OpenClaw account creation**: OpenClaw sử dụng gateway auth (token/password) thay vì user accounts truyền thống. Manager thiết lập password auth mode khi tạo "tài khoản".
-- **ChatGPT OAuth**: Flow OAuth PKCE dựa trên redirect URL. Token được lưu encrypted và sync vào env file.
-- **Custom providers**: Được thêm vào `openclaw.json` dưới `models.providers` theo format OpenAI-compatible.
+## Hướng dẫn chi tiết
+
+Xem file [HUONG_DAN_SU_DUNG.md](HUONG_DAN_SU_DUNG.md) để có hướng dẫn đầy đủ từ A-Z:
+- Cài đặt từng bước
+- Cấu hình AI provider (20+ providers)
+- Kết nối Telegram / Discord / Slack / Zalo
+- Multi-Agent & routing
+- ChatGPT OAuth flow
+- Xử lý sự cố chi tiết
+- Hướng dẫn cho nhà cung cấp VPS
+
+---
 
 ## License
 

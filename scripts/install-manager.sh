@@ -12,7 +12,7 @@ set -euo pipefail
 
 INSTALL_DIR="/opt/openclaw-manager"
 NODE_VERSION="22"
-REPO_URL="https://github.com/your-org/openclaw-manager.git"  # TODO: Replace with actual repo
+REPO_URL="https://github.com/khiembui-dev/openclaw-manager.git"
 BRANCH="main"
 SERVICE_NAME="openclaw-manager"
 PORT=3847
